@@ -1,0 +1,207 @@
+<!--
+  Copyright (c) 2016 OpenPOWER Foundation
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+-->
+<!--
+About the XML editing: 
+It's really hard. I am using gvim (Macvim)
+I downloaded a filetype plugin from https://github.com/othree/xml.vim.git
+(git clone it, and copy the ftplugin folder into your ~/.vim folder. )
+It helps a little bit. use ':help xml-plugin' to see what it has. 
+
+
+BTW, I also turned on spelling checking by ':set spell spelllang=en_us' in vim. 
+You can put it into your ~/.vimrc (no comma needed). 
+If you want to disable the spell checking,just ':set nospell'
+
+There is another trick. You will find that the spelling checker doesn't work 
+for your paragraphs. I found an alternative way is to ':set filetype=html'
+
+
+-->
+<chapter version="5.0" xml:lang="en" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude"
+xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_psl">
+  
+  <!-- Chapter Title goes here. -->
+  <title>Work with CAPI1.0 HDK project</title>
+
+  <note>
+	  <para>
+		  Ask your contact representative or write to capi@us.ibm.com to get a CAPI1.0 HDK project to start. This chapter only works for CAPI1.0, running on Power8. 	  </para>
+  </note> 
+  <section> <title>Steps and directory structure</title>
+    <para>We use an "Out-of-context" flow to generate a PSL dcp file. For a new FPGA card, following steps need to be done:</para>
+    <figure pgwide="1" xml:id="step4">
+        <title>Four steps to build a PSL checkpoint</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/psl-4steps.png" format="PNG" scalefit="1" width="80%" align="center" />
+          </imageobject>
+        </mediaobject>
+    </figure> 
+   
+    <para>We use an "Out-of-context" flow to generate a PSL dcp file. The directory structure is as following:</para>
+    <figure pgwide="1" xml:id="hdk-dir">
+        <title>HDK directory structure</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/hdk-structure.png" format="PNG" scalefit="1" width="90%" align="center" />
+          </imageobject>
+        </mediaobject>
+  </figure> 
+  <para>
+	  In <emphasis role="bold">build_dir/Sources</emphasis>
+  </para>
+  <itemizedlist>
+  <listitem><para>The "prj" directory includes the source file lists.</para></listitem>
+  <listitem><para>The "top" directory includes the top design file "psl_fpga.vhdl" and the wrapper for AFU "psl_accel.vhdl"</para></listitem>
+  <listitem><para>PSL source files are in "psl" directory.</para></listitem>
+  <listitem><para>AFU source files are in "afu" directory.</para></listitem>
+  <listitem><para>"cores" includes 4 Xilinx IP cores used by PSL.</para></listitem>
+  <listitem><para>"xdc" are the constraint files used by PSL and the top design.</para></listitem>
+  </itemizedlist>
+  <para>In build_dir, psl_fpga.tcl is the script "entrance". It assigns the FPGA chip information, and the build flow. </para>
+  <para>FPGA chip information is needed for a new FPGA card, for example:</para>
+  <screen>set device       "xcku115"
+set package      "-flva1517"
+set speed        "-2-e"</screen> 
+  <para>And some controlling bits are for two build flows:</para>
+  <para>1. Build a PSL checkpoint.</para> 
+  <para>2. Build a whole FPGA image (including AFU).</para>
+
+  </section>
+  <section><title>Generate PSL Checkpoint (b_route_design.dcp)</title>
+  <para>In this section, we just talk about the first build flow - "build a PSL checkpoint". Read it when you need to enable a FPGA card on CAPI1.0 or to fix a bug and update b_routed_design.dcp. The controlling bits should be set as:</para>
+	  
+  <screen>####flow control
+set run.topSynth   1
+set run.oocSynth   1
+set run.tdImpl     0
+set run.oocImpl    1
+set run.topImpl    0
+set run.flatImpl   0</screen>
+  <para>The outfile file will be placed in "Checkpoint" directory, the file name is "b_route_design.dcp".</para>
+
+  <section><title>Upgrade Xilinx IP cores</title>
+	  <para>When a FPGA chip type is changed, or the Vivado tool version has been upgraded, you need to upgrade the Xilinx IP cores that are used in PSL module. PSL module has instantiated four Xilinx IP cores (in Sources/cores):</para>
+	  <itemizedlist>
+		  <listitem><para>pcie3_ultrascale_0</para></listitem>
+		  <listitem><para>sem_ultra_0 (Soft Error Migration)</para></listitem>
+		  <listitem><para>clk_wiz_0</para></listitem>
+		  <listitem><para>tx_wr_fifo</para></listitem>
+	  </itemizedlist>
+	  <para>Steps to upgrade them:</para>
+	  <orderedlist>
+		  <listitem><para>Open Vivado GUI</para></listitem>
+		  <listitem><para>Create a new project. For the second time, just open the project with the four IP cores.</para></listitem>
+		  <listitem><para>Import IP cores (by importing *.xci files under "Source/cores/xxx" directory). For the second time, this step is not needed.</para></listitem>
+		  <listitem><para>Set FPGA type in Project Settings.</para></listitem>
+		  <listitem><para>Run "Tools->Report->Report IP Status"</para></listitem>
+		  <listitem><para>"Upgrade All" and read the upgrade log.</para></listitem>
+	  </orderedlist>
+    <figure pgwide="1" xml:id="ip-update">
+        <title>Small project to update IPs</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/ip-update.png" format="PNG" scalefit="1" width="100%" align="center" />
+          </imageobject>
+        </mediaobject>
+    </figure> 
+    <figure pgwide="1" xml:id="report-ip">
+        <title>Report IP Status</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/report-ip.png" format="PNG" scalefit="1" width="70%" align="center" />
+          </imageobject>
+        </mediaobject>
+    </figure>
+    <note>
+	    <para>For PCIe IP, you need to change subsystem_id for a new card. Right click pcie3_ultrascale_0 -> Reconfig IP and change the subsystem ID field. </para>
+	    <para>Ask an IBM representative for the subsystem ID. </para>
+    </note>
+  </section>
+  <section><title>Input xdc files</title>
+	  <para>The IO pin package information for the new card should be provided by card vendor. Generally, they include Flash Interface, PCIe Interface and other interfaces like I2C and LED. Sample code with IO pins in b_phys.xdc:</para> 
+	  <para>Refer to Xilinx document UG575 for detailed pin package information.</para>
+	  <para>Example:</para>
+	  <screen>set_property PACKAGE_PIN AJ15  [get_ports {o_flash_a[1]}]
+set_property PACKAGE_PIN AK15  [get_ports {o_flash_a[2]}]
+set_property PACKAGE_PIN AH14  [get_ports {o_flash_a[3]}]
+
+set_property IOSTANDARD LVCMOS18 [get_ports {o_flash_a[1]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {o_flash_a[2]}]
+set_property IOSTANDARD LVCMOS18 [get_ports {o_flash_a[3]}]</screen>
+	  <para>Some other constraints also must be updated for the new selection of FPGA chip. It defines the floorplan for PSL. </para>
+	  <note>
+		  <para>There is also a patch to keep VSEC address for Vivado2017.4 and newer Vivado version:</para>
+		  <screen>set_property PF0_SECONDARY_PCIE_CAP_NEXTPTR 12'h400 [get_cells *pcihip0/psl_pcihip0_inst/inst/pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst]</screen>
+		  <para>This is the base address for VSEC registers. capi-utils uses it to set the register address to send bitstream data to flash controller.</para>
+		  <para><emphasis role="bold">Update:</emphasis>This step is not needed after "ECAP update (#28)" commit of capi-utils in Feb 2018.</para>
+	  </note>
+
+  </section>
+  <section><title>Run Vivado to generate PSL checkpoint</title>
+	  <screen>vivado -mode batch -source psl_fpga.tcl -notrace</screen>
+	  <para>The checkpoint file b_route_design.dcp will be generated and put in "Checkpoint" directory. With this checkpoint file, we can continue to build a full FPGA bit image and validate it on hardware.</para>
+	  
+  </section> 
+  </section>
+
+  <section><title>Generate full FPGA image</title>
+	  <section><title>Steps</title>
+  <figure pgwide="1" xml:id="full-steps">
+        <title>Steps to build the full FPGA image</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/full-steps.png" format="PNG" scalefit="1" width="70%" align="center" />
+          </imageobject>
+        </mediaobject>
+  </figure>  
+  <para>This time the controlling bits should be set to:</para>
+  <screen>####flow control
+set run.topSynth   1
+set run.oocSynth   0
+set run.tdImpl     0
+set run.oocImpl    0
+set run.topImpl    1
+set run.flatImpl   0</screen>
+	  </section>
+	  <section><title>Check top design file psl_fpga.vhdl</title>
+		  <para>For a new card, the IO pins and functions may be different to your reference card design. So the logic in top file psl_fpga.vhdl needs to be updated.</para>
+		  <para>Similarly, the xdc file "……topimp.xdc" also needs to be updated.</para>
+	  </section>
+	  <section><title>Prepare filelist for psl_fpga.prj</title>
+		  <para>The "prj" file is a file list. It should contain all the AFU design files. Edit it.</para>
+	  </section>
+	  <section><title>Run Vivado</title>
+		  <para>Two sub steps are here.</para>
+		  <screen>vivado -mode batch -source psl_fpga.tcl -notrace</screen>
+		  <para>Now the bit file is generated</para>
+		  <screen>vivado -mode batch -source write_bitstream.tcl -notrace</screen>
+		  <para>Now you get the bin files to be program to the FPGA flash.</para>
+
+		  <para>For more information about FPGA configuration, please refer to Xilinx Document UG570.</para>
+		  <para>Then you can program the generated bin file to FPGA either by JTAG or on-line programming tools  <link xlink:href="https://github.com/ibm-capi/capi-utils">capi-utils</link></para>
+	  </section>
+	  
+  </section>
+
+
+  
+  
+</chapter>
+
+
+

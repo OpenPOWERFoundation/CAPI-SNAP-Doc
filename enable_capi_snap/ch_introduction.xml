@@ -1,0 +1,94 @@
+<!--
+  Copyright (c) 2016 OpenPOWER Foundation
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+-->
+<!--
+About the XML editing: 
+It's really hard. I am using gvim (Macvim)
+I downloaded a filetype plugin from https://github.com/othree/xml.vim.git
+(git clone it, and copy the ftplugin folder into your ~/.vim folder. )
+It helps a little bit. use ':help xml-plugin' to see what it has. 
+
+
+BTW, I also turned on spelling checking by ':set spell spelllang=en_us' in vim. 
+You can put it into your ~/.vimrc (no comma needed). 
+If you want to disable the spell checking,just ':set nospell'
+
+There is another trick. You will find that the spelling checker doesn't work 
+for your paragraphs. I found an alternative way is to ':set filetype=html'
+
+
+-->
+<chapter version="5.0" xml:lang="en" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude"
+xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
+  
+  <!-- Chapter Title goes here. -->
+  <title>Introduction</title>
+
+  
+  <section> <title>What is CAPI</title>
+    <para>CAPI stands for "Coherent Accelerator Processor Interface" which enables FPGA to access Host memory by virtual address. You can find more introduction about this interface on <link xlink:href="https://developer.ibm.com/linuxonpower/capi/">https://developer.ibm.com/linuxonpower/capi/</link>. It is an important feature to develop hardware accelerators in heterogeneous computing. In this document, the "hardware accelerators" are built on FPGA. </para>
+    <figure pgwide="1" xml:id="capi1">
+        <title>CAPI(1.0 and 2.0) basic concept</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/capi1.png" format="PNG" scalefit="1" width="70%" />
+          </imageobject>
+        </mediaobject>
+    </figure> 
+   
+    <para>A complete accelerator has software part (APP, or Applications) running on CPU Processor and the hardware part (AFU, Acceleration Function Unit) running on FPGA chip. APP and AFU are sharing host memory, that means, they both can read and write the 2^64 range of virtual memory address. To make it happen, CAPI technology has a CAPP (Coherent Acceleration Processor Proxy) logic unit in Processor chip, and also needs a PSL (Processor Service Layer) logic unit in FPGA chip. For CAPI1.0 and CAPI2.0, the interconnection between processor and FPGA is using PCIe physical links and PCIe form factor. CAPI1.0 uses PCIe Gen3x8 and CAPI2.0 uses PCIe Gen4x8 or Gen3x16. (For OpenCAPI, the physical links and the connected datalink layer and transportation layer all change to OpenCAPI. Please check <link xlink:href="https://opencapi.org">https://opencapi.org</link> for more information. It is not covered in this document.)</para>
+  </section>
+  
+  
+  <section> <title>HDK and SNAP</title>
+  <para> Let's focus on the FPGA side.</para>
+  <para> A customer FPGA card needs to have a PSL module (Processor Service Interface) to become a "CAPI-enabled" card. This PSL module is provided by IBM. For CAPI1.0, it is in the form of a post-implemented dcp file (Xilinx Vivado design checkpoint). For CAPI2.0, it is encrypted source code. They can be downloaded at <link xlink:href="https://www.ibm.com/systems/power/openpower">https://www.ibm.com/systems/power/openpower</link>. From the menu, select "CAPI","Coherent Accelerator Processor Interface (CAPI)" or directly click the "CAPI" icon to go to the CAPI section. Then download the appropriate files depending on your target system being POWER8 (CAPI 1.0) or POWER9 (CAPI 2.0). You need to register an IBM ID to download them.</para>
+  <para>A project from FPGA Vendors (i.e, a Xilinx Vivado project), including PSL module and sample user logic (AFU), is delivered to acceleration developers. This project is called HDK (Hardware Development Kit). </para>
+    <figure pgwide="1" xml:id="hdk1">
+        <title>Develop an acceleration on HDK</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/hdk.png" format="PNG" scalefit="1" width="80%" align="center"/>
+          </imageobject>
+        </mediaobject>
+    </figure> 
+
+  <para>Working on HDK, developers need to know the details about PSL interface specifications. You can find <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/psl-afu-spec/content/go01.html"> CAPI1.0 PSL Spec</link> and <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/v2-psl-afu-spec/content/ch_preface.html"> CAPI2.0 PSL Spec</link> or search "PSL/AFU interface" in your web browser. But they have differences. To hide the differences on the interface and provide an industry standard interface protocol (AXI), we also created SNAP framework. </para>
+  
+  <para>SNAP is the abbreviation of Storage, Networking and Analytics Programming. It is an open-source framework <link xlink:href="https://github.com/open-power/snap"> https://github.com/open-power/snap</link>. On the FPGA side, SNAP framework adds a PSL/AXI bridge, a DDR SDRAM controller and an optional NVMe controller. Thus, the developer can focus on their acceleration kernel logic (here we call it hardware action) and interface the framework via several AXI ports. </para>
+    <figure pgwide="1" xml:id="snap1">
+        <title>Develop an acceleration on SNAP</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/snap.png" format="PNG" scalefit="1" width="90%" align="center" />
+          </imageobject>
+        </mediaobject>
+    </figure> 
+
+  <para> For both CAPI1.0 and CAPI2.0, people can choose to work on HDK or on SNAP. The preferred way is to work on SNAP. In the following chapters, we will introduce:</para>
+   <itemizedlist>
+     <listitem><para> Enable a FPGA card in SNAP </para></listitem>
+     <listitem><para> Generate a PSL Checkpoint (CAPI1.0 only) </para></listitem>
+     <listitem><para> Work with HDK (CAPI1.0) </para></listitem>
+     <listitem><para> Work with HDK (CAPI2.0) </para></listitem>
+   </itemizedlist>
+
+   <para>For most of the new cards on Power9, just reading the chapter of "Enable a FPGA card in SNAP" is enough. You can find abundant materials on how to develop an accelerator with SNAP (Training videos, "docs" folder on github, or other webpages) so they are not discussed in this document.</para>
+   </section>
+</chapter>
+
+
+
