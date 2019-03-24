@@ -17,8 +17,6 @@
   <modules>
     <!-- TODO: Add new documents are build in the project, add their directories to this list to
                enable all document builds from the top level -->
-    <module>doc_dev_guide</module>
-    <module>doc_template</module>
-    <module>errata_template</module>
+    <module>enable_capi_snap</module>
   </modules>
 </project>
