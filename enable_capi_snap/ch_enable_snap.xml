@@ -70,7 +70,6 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_enable_snap">
     </listitem>
     </itemizedlist>
   </section>
-
   <section><title>BSP (board support package) module</title>
      <figure pgwide="1" xml:id="base_image">
         <title>CAPI1.0: base_image (b_route_design.dcp)</title>
@@ -122,9 +121,8 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_enable_snap">
     </para>
 
   </section>
-
-  <section><title>Enable a new card in SNAP</title>
-	  <para>For a new FPGA card, the detailed items to update can be classified into following sections:</para>
+  <section><title>Modifications to snap git repositories</title>
+	  <para>For a new FPGA card, the detailed items to update are:</para>
 	  <itemizedlist>
 	  <listitem><para>Preparations</para></listitem>
 	  <listitem><para>Hardware RTL, setup, simulation</para></listitem>
@@ -134,7 +132,7 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_enable_snap">
 	  </itemizedlist>
      
     <section><title>Preppartions</title>
-        <para>First, give a FPGACARD name. It should start from the company's name, following with the card ID and be short. For example. ADKU3 = Alpha-Data ADM-PCIE-KU3. Get follow information from the card vendor. (You can check the "Status" column to trace the progress.)</para>
+        <para>First, give a FPGACARD name. It should start from the company's name, following with the card ID and be short. For example. ADKU3 = Alpha-Data ADM-PCIE-KU3. Get follow information from the card vendor.</para>
 		  <!-- A table starts -->
 	<table frame="all" pgwide="1" xml:id="info1">
         <title>Information to collect</title>
@@ -208,7 +206,7 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_enable_snap">
 	    </itemizedlist>
     <note>
     <itemizedlist>
-    <listitem><para> For CAPI1.0, you need to generate a new PSL checkpoint file and upload it to OpenPower Portal. Chapter TODO describes the details.</para></listitem>
+	    <listitem><para> For CAPI1.0, you need to generate a new PSL checkpoint file and upload it to OpenPower Portal. Section <xref linkend="section_gen_psl_chkpt" endterm="section_gen_psl_chkpt_title"/> describes the details.</para></listitem>
     <listitem><para> For CAPI2.0, you need to add a ${FPGACARD} directory in capi2-bsp git repository. Copy an existing folder as a start and follow the README file.</para></listitem>
     <listitem><para> Make sure the information in xdc/tcl files are permitted to be open-source.</para></listitem>
     <listitem><para> Send email to OpenPower Acceleration Workgroup or contact your representative to apply for a subsystem device ID for the new card. For example, ADKU3 uses 0x0605. S241 uses 0x0660. </para></listitem>
@@ -345,9 +343,74 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_enable_snap">
         </tgroup>
       </table>
 
-
     </section>
   </section>
+ <section><title>Strategy to enable a new card</title>
+	 <para>
+		    To enable a new card on SNAP, please take following tasks one by one.
+	 </para>
+	 <section><title>Stage 1: Verify PCIe interface</title>
+	    <orderedlist>
+		    <listitem><para>Make modifications to snap git repository (and capi2-bsp) as described above.</para></listitem>
+		    <listitem><para>Select an action example without DDR, for example: hls_helloworld. </para></listitem>
+		    <listitem><para>Go through the "make model" and "make image" processes and get the bitstream files. </para></listitem>
+		    <listitem><para>Plug the card onto Power8/Power9 server and power on.</para></listitem>
+		    <listitem><para>Use Jtag to program the generated bitstream files (bin or mcs) to the card. You need a laptop or workstation installed Vivado Lab Edition, and connect a JTAG/USB cable to the card. Open Hardware Manager, open target, select the FPGA chip and right-click, choose "Add Configuration Memory Device..." and program the bitstream files. See in picture <xref linkend="vivado-lab"/> and <xref linkend="jtag"/> </para></listitem>
+		    <listitem><para>Wait it done, unplug the JTAG/USB cable, reboot the server.</para></listitem>
+		    <listitem><para>When the server is booted, install snap, capi-utils, libcxl. Run <userinput>lspci</userinput> to see if the card is there. (Usually with ID 0x0477). Then go to snap directory, <userinput>make apps</userinput> and run the application. </para></listitem>
+	    </orderedlist>
+
+	<figure pgwide="1" xml:id="vivado-lab">
+        <title>Vivado Lab Edition</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/vivado-lab.png" format="PNG" scalefit="1" width="70%" align="center" />
+          </imageobject>
+        </mediaobject>
+        </figure> 
+	<figure pgwide="1" xml:id="jtag">
+        <title>Add Configuration Memory Device and Program the flash</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/jtag.png" format="PNG" scalefit="1" width="100%" align="center" />
+          </imageobject>
+        </mediaobject>
+        </figure> 
+
+	<important>
+	<para>When you download and install Vivado Lab Edition, please pick up as same version as the Vivado (SDx) that you are using to build images. </para>
+	</important>
+	 </section>
+	 <section><title>Stage 2: Verify Flash interface</title>
+	<para>Use <link xlink:href="https://github.com/ibm-capi/capi-utils">capi-utils</link> to program the bitstream files. If it succeeds, it proves that the Flash interface has been configured correctly. </para>
+	 </section>
+
+	 <section><title>Stage 3: Verify DDR interface</title>
+	<orderedlist>
+	<listitem><para>Select another action example (hdl_example with DDR) or hls_memcopy.</para></listitem>
+	<listitem><para>"make model" and "make sim". Make sure the DDR simulation model works well.</para></listitem>
+	<listitem><para>"make image" to generate the bitstream files.</para></listitem>
+	<listitem><para>Use capi-utils to program the bitstream files to the card.</para></listitem>
+	<listitem><para>Run the application to see if it works.</para></listitem>
+	</orderedlist>
+	 </section>
+		 
+
+	
+	 <section><title>Stage 4: Verify Other IO interface</title>
+	<para>This step is decided by the card vendor and the specific IOs that the card provide.</para>
+	 </section>
+
+
+	 <section><title>Stage 5: Performance Validation</title>
+	<para>You can check the result of "snap/actions/hls_memcopy/tests/test_*_throughput.sh" for bandwidth and "snap/actions/hls_latency_eval/test/test*.sh" for latency.  </para>
+	 </section>
+	
+	 <section><title>Stage 6: Pressure Test</title>
+	<para>Prepare bitstream files for basic tests, throughput tests, latency tests, max-power tests. Adding image flashing tests, card reset tests and others. Run them intensively.</para>
+	 </section>
+    </section>
+
   
 </chapter>
 

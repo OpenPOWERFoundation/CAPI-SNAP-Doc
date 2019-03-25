@@ -82,7 +82,7 @@ set speed        "-2-e"</screen>
   <para>2. Build a whole FPGA image (including AFU).</para>
 
   </section>
-  <section><title>Generate PSL Checkpoint (b_route_design.dcp)</title>
+  <section xml:id="section_gen_psl_chkpt"><title xml:id="section_gen_psl_chkpt_title">Generate PSL Checkpoint (b_route_design.dcp)</title>
   <para>In this section, we just talk about the first build flow - "build a PSL checkpoint". Read it when you need to enable a FPGA card on CAPI1.0 or to fix a bug and update b_routed_design.dcp. The controlling bits should be set as:</para>
 	  
   <screen>####flow control
