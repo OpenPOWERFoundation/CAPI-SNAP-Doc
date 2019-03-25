@@ -81,7 +81,6 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
   <para> For both CAPI1.0 and CAPI2.0, people can choose to work on HDK or on SNAP. The preferred way is to work on SNAP. In the following chapters, we will introduce:</para>
    <itemizedlist>
      <listitem><para> Enable a FPGA card in SNAP </para></listitem>
-     <listitem><para> Generate a PSL Checkpoint (CAPI1.0 only) </para></listitem>
      <listitem><para> Work with HDK (CAPI1.0) </para></listitem>
      <listitem><para> Work with HDK (CAPI2.0) </para></listitem>
    </itemizedlist>

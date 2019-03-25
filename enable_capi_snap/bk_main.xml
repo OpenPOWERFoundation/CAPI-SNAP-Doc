@@ -108,6 +108,7 @@
   <xi:include href="../../Docs-Master/common/app_foundation.xml"/>
 
   <!-- TODO: The following template document may be modified to create additional appendices as needed. -->
-  <xi:include href="app_template.xml"/>
+  <!-- <xi:include href="app_template.xml"/>
+  -->
 
 </book>
