@@ -32,9 +32,9 @@
   xml:id="bk_main">
 
     <!-- TODO: Pick a Title for the new document -->
-    <title>Enable FPGA for SNAP</title>
+    <title>Enable new FPGA card for CAPI2.0</title>
     <!-- TODO: Either add a subtitle or remove the following line -->
-    <subtitle>For CAPI2.0 and CAPI1.0</subtitle>
+    <subtitle>BSP and SNAP</subtitle>
 
     <info>
     <author>
@@ -70,7 +70,7 @@
       <!-- TODO: remove "phrase" tags (2) and text below and insert proper information -->
       <para>The purpose of this document is to describe how to enable a new customer card on CAPI SNAP framework. SNAP is a open-sourced programming framework for FPGA Acclerations. Its homepage is <link xlink:href="https://github.com/open-power/snap">https://github.com/open-power/snap</link>. With it, you can develop accelerations with Power and CAPI technology easily.</para>
       
-      <para>This document describes when you get a PCIe FPGA card not listed in today's "SNAP enabled cards" (On the homepage README of SNAP github website), <emphasis role="bold">how do you get it enabled</emphasis>. Since all of the files are open-sourced, you can create a board support package (bsp) similar to the existing one and walk through the entire working flow with the help of this document. </para>
+      <para>This document describes the flow and steps to enable a new PCIe FPGA card to have or CAPI2.0 capability. Firstly, please check whether your PCIe FPGA card is listed on today's "SNAP enabled cards" (On the homepage README of <link xlink:href="https://github.com/open-power/snap">SNAP Github</link>), if not, this document will guide you on <emphasis role="bold">how to enable it</emphasis>. Since all of the project files are open-sourced, you can create a Github repository fork, and create a new board support package (BSP) and walk through the entire working flow to enable SNAP. </para>
 
       <para>This document is a Standard Track, Workgroup Specification work product owned by the Acceleration Workgroup and handled in compliance with the requirements outlined in the
       <citetitle>OpenPOWER Foundation Work Group (WG) Process</citetitle> document.  It was
@@ -101,8 +101,8 @@
   <!-- TODO: Add your chapter heading files here.  Remove both files and insert your own. -->
   <!--       See the template document for naming conventions and location of files.      -->
   <xi:include href="ch_introduction.xml"/>
-  <xi:include href="ch_enable_snap.xml"/>
-  <xi:include href="ch_genpsl_capi10.xml"/>
+  <xi:include href="ch_capi20_bsp.xml"/>
+  <xi:include href="ch_capi20_snap.xml"/>
 
   <!-- The app_foundation.xml appendix file is required by all documents. -->
   <xi:include href="../../Docs-Master/common/app_foundation.xml"/>

@@ -41,7 +41,7 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
   <section> <title>What is CAPI</title>
     <para>CAPI stands for "Coherent Accelerator Processor Interface" which enables FPGA to access Host memory by virtual address. You can find more introduction about this interface on <link xlink:href="https://developer.ibm.com/linuxonpower/capi/">https://developer.ibm.com/linuxonpower/capi/</link>. It is an important feature to develop hardware accelerators in heterogeneous computing. In this document, the "hardware accelerators" are built on FPGA. </para>
     <figure pgwide="1" xml:id="capi1">
-        <title>CAPI(1.0 and 2.0) basic concept</title>
+        <title>CAPI basic concept</title>
         <mediaobject>
           <imageobject>
             <imagedata fileref="figures/capi1.png" format="PNG" scalefit="1" width="70%" />
@@ -49,14 +49,25 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
         </mediaobject>
     </figure> 
    
-    <para>A complete accelerator has software part (APP, or Applications) running on CPU Processor and the hardware part (AFU, Acceleration Function Unit) running on FPGA chip. APP and AFU are sharing host memory, that means, they both can read and write the 2^64 range of virtual memory address. To make it happen, CAPI technology has a CAPP (Coherent Acceleration Processor Proxy) logic unit in Processor chip, and also needs a PSL (Processor Service Layer) logic unit in FPGA chip. For CAPI1.0 and CAPI2.0, the interconnection between processor and FPGA is using PCIe physical links and PCIe form factor. CAPI1.0 uses PCIe Gen3x8 and CAPI2.0 uses PCIe Gen4x8 or Gen3x16. (For OpenCAPI, the physical links and the connected datalink layer and transportation layer all change to OpenCAPI. Please check <link xlink:href="https://opencapi.org">https://opencapi.org</link> for more information. It is not covered in this document.)</para>
+    <para>A complete accelerator has software part (APP, or Applications) running on CPU Processor and the hardware part (AFU, Acceleration Function Unit) running on FPGA chip. APP and AFU are sharing host memory, that means, they both can read and write the 2^64 range of virtual memory address. To make it happen, CAPI technology has a CAPP (Coherent Acceleration Processor Proxy) logic unit in Processor chip, and also needs a PSL (Processor Service Layer) logic unit in FPGA chip. For CAPI1.0 and CAPI2.0, the interconnection between processor and FPGA is using PCIe physical links and PCIe form factor.</para>
+    <para> CAPI1.0 uses PCIe Gen3x8. </para>
+    <para> CAPI2.0 uses PCIe Gen4x8 or Gen3x16.</para>
+    <para> OpenCAPI is not covered in this document. Please check <link xlink:href="https://opencapi.org">https://opencapi.org</link> for more information. </para>
   </section>
   
   
-  <section> <title>HDK and SNAP</title>
+  <section> <title>Enable PSL IP on FPGA</title>
   <para> Let's focus on the FPGA side.</para>
-  <para> A customer FPGA card needs to have a PSL module (Processor Service Interface) to become a "CAPI-enabled" card. This PSL module is provided by IBM. For CAPI1.0, it is in the form of a post-implemented dcp file (Xilinx Vivado design checkpoint). For CAPI2.0, it is encrypted source code. They can be downloaded at <link xlink:href="https://www.ibm.com/systems/power/openpower">https://www.ibm.com/systems/power/openpower</link>. From the menu, select "CAPI","Coherent Accelerator Processor Interface (CAPI)" or directly click the "CAPI" icon to go to the CAPI section. Then download the appropriate files depending on your target system being POWER8 (CAPI 1.0) or POWER9 (CAPI 2.0). You need to register an IBM ID to download them.</para>
-  <para>A project from FPGA Vendors (i.e, a Xilinx Vivado project), including PSL module and sample user logic (AFU), is delivered to acceleration developers. This project is called HDK (Hardware Development Kit). </para>
+  <para> A customer FPGA card needs to have a PSL module (Processor Service Interface) to become a "CAPI-enabled" card. This PSL module is provided by OpenPower Foundation and is an IBM IP. </para>
+  <itemizedlist>
+     <listitem><para> For CAPI1.0, PSL module and the surrounding board specific modules are provided in the form of a routed dcp file (Xilinx Vivado design checkpoint). It's usually called b_route_design.dcp. </para></listitem>
+     <listitem><para> For CAPI2.0, PSL is an IP package with encrypted source code. It's named like ibm.com_CAPI_PSL9_WRAP_2.00.zip.</para></listitem>
+   </itemizedlist> 
+   <para> They can be downloaded at <link xlink:href="https://www.ibm.com/systems/power/openpower">https://www.ibm.com/systems/power/openpower</link>. From the menu, select "CAPI","Coherent Accelerator Processor Interface (CAPI)" or directly click the "CAPI" icon to go to the CAPI section. Then download the appropriate files depending on your target system being POWER8 (CAPI 1.0) or POWER9 (CAPI 2.0). You need to register an IBM ID to download them.</para>
+   <para> For a new FPGA card, if you want to enable CAPI on it, it simply means to create a board supporting package which includes the PSL module onto the FPGA and let it work. There are two levels: HDK and SNAP. </para>
+   <section> <title>HDK</title>
+
+           <para>For HDK, a project from FPGA Vendors (i.e, a Xilinx Vivado project) which is composed of <emphasis>BSP</emphasis> (Board Supporting Package, containing PSL module) and sample user logic (AFU), is delivered to acceleration developers. This project is called HDK (Hardware Development Kit). </para>
     <figure pgwide="1" xml:id="hdk1">
         <title>Develop an acceleration on HDK</title>
         <mediaobject>
@@ -66,9 +77,13 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
         </mediaobject>
     </figure> 
 
-  <para>Working on HDK, developers need to know the details about PSL interface specifications. You can find <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/psl-afu-spec/content/go01.html"> CAPI1.0 PSL Spec</link> and <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/v2-psl-afu-spec/content/ch_preface.html"> CAPI2.0 PSL Spec</link> or search "PSL/AFU interface" in your web browser. But they have differences. To hide the differences on the interface and provide an industry standard interface protocol (AXI), we also created SNAP framework. </para>
-  
-  <para>SNAP is the abbreviation of Storage, Networking and Analytics Programming. It is an open-source framework <link xlink:href="https://github.com/open-power/snap"> https://github.com/open-power/snap</link>. On the FPGA side, SNAP framework adds a PSL/AXI bridge, a DDR SDRAM controller and an optional NVMe controller. Thus, the developer can focus on their acceleration kernel logic (here we call it hardware action) and interface the framework via several AXI ports. </para>
+    <para>The developers working on HDK level need to know the details about PSL interface specifications and write Verilog/VHDL logic to interact to it. Please refer to <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/psl-afu-spec/content/go01.html"> CAPI1.0 PSL Spec</link> and <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/v2-psl-afu-spec/content/ch_preface.html"> CAPI2.0 PSL Spec</link> or search "PSL/AFU interface" in your web browser. </para>
+    <para>As a full development environment, you also need SDK (Software Development Kit) which contains the example application software code and PSLSE (PSL Simulation Engine) for a software-hardware together simulation to guarantee the correctness of accelerator design. </para>
+    <para>HDK provides the maximum available FPGA resource area and the shortest latency. However, we recommend developers to work on SNAP because SNAP simplifies the developing work significantly. </para>
+   </section>
+
+  <section> <title>SNAP</title>
+  <para>SNAP is the abbreviation of Storage, Networking and Analytics Programming. It is an open-source acceleration development framework <link xlink:href="https://github.com/open-power/snap"> https://github.com/open-power/snap</link>. On the FPGA side, SNAP framework adds a PSL/AXI bridge, a DDR SDRAM controller and an optional NVMe controller. Thus, the developer can focus on their acceleration kernel logic (here we call it hardware action) and interface the framework via several AXI ports. </para>
     <figure pgwide="1" xml:id="snap1">
         <title>Develop an acceleration on SNAP</title>
         <mediaobject>
@@ -77,16 +92,18 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
           </imageobject>
         </mediaobject>
     </figure> 
-
-  <para> For both CAPI1.0 and CAPI2.0, people can choose to work on HDK or on SNAP. The preferred way is to work on SNAP. In the following chapters, we will introduce:</para>
-   <itemizedlist>
-     <listitem><para> Enable a FPGA card in SNAP </para></listitem>
-     <listitem><para> Work with HDK (CAPI1.0) </para></listitem>
-     <listitem><para> Work with HDK (CAPI2.0) </para></listitem>
+   
+  <para>This document focus on CAPI2.0. For CAPI1.0 enablement, the BSP part is a little different, please contact an IBM representative for more information. The SNAP part is the same.</para>
+  <para>In following chapters, we introduce how to:</para>
+  <itemizedlist>
+     <listitem><para>Enable BSP </para></listitem>
+     <listitem><para>Enable SNAP </para></listitem>
    </itemizedlist>
 
-   <para>For most of the new cards on Power9, just reading the chapter of "Enable a FPGA card in SNAP" is enough. You can find abundant materials on how to develop an accelerator with SNAP (Training videos, "docs" folder on github, or other webpages) so they are not discussed in this document.</para>
-   </section>
+   <para>We assume the reader knows how to work on Vivado Project and SNAP already. You can find many materials on how to develop an accelerator with SNAP (Training videos, "docs" folder on <link xlink:href="https://github.com/open-power/snap"> snap github</link>, or other webpages) so they are not discussed in this document.</para>
+  </section>
+ 
+  </section>
 </chapter>
 
 
