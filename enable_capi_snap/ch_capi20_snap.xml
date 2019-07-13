@@ -1,0 +1,368 @@
+<!--
+    Copyright (c) 2016 OpenPOWER Foundation
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<chapter version="5.0" xml:lang="en" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude"
+                                     xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_capi20_snap">
+
+<!-- Chapter Title goes here. -->
+<title>Enable CAPI2.0 SNAP</title>
+
+<section><title>Work on github</title>
+    <para>Snap is also a public Github repository. Create a "fork" (Click the "fork" button) on <link xlink:href="https://github.com/open-power/snap">https://github.com/open-power/snap</link>. Keep working on your own snap fork, when it works, submit a pull request to "open-power/snap" and require merging into the public upstream.</para>
+    <screen>git clone https://github.com/[YOUR_USERNAME]/snap</screen>
+    <note>
+    <para>capi2-bsp is a submodule of snap. You can find it in ".gitmodules" file (this is a hidden file). Please point it to your own capi2-bsp fork. Then </para>
+    <screen>git submodule init
+git submodule update</screen>
+    <para>Anyway, make sure that "hardware/capi2-bsp" is what you have just generated in last chapter.</para>
+    </note>
+</section>
+
+<section><title>SNAP structure</title>
+    <para>On the FPGA side, there are three parts that need to consider when moving to a new FPGA card. They are (a) BSP, (b) snap_core, (c) DDR memory controller (mig). And there are also some components in SNAP need to be updated for a new FPGA card. </para>
+    <figure pgwide="1" xml:id="psl_fpga">
+        <title>Design hierarchy</title>
+        <mediaobject>
+        <imageobject>
+        <imagedata fileref="figures/psl_fpga.png" format="PNG" scalefit="1" width="90%" align="center" />
+        </imageobject>
+        </mediaobject>
+    </figure> 
+    <para> SNAP also includes the software part. The following picture shows the SNAP github repository folders and files: </para>
+    <figure pgwide="1" xml:id="snap-str">
+        <title>Repository structure</title>
+        <mediaobject>
+        <imageobject>
+        <imagedata fileref="figures/snap-structure_white.png" format="PNG" scalefit="1" width="90%" align="center" />
+        </imageobject>
+        </mediaobject>
+    </figure> 
+    <para>All of the user-developed accelerators are in "<emphasis role="bold">actions</emphasis>" directory. There are already some examples there. Each "action" has its "sw", "hw", "tests", and other sub-directories. The hardware part uses "action_wrapper" as its top.</para>
+    <para>Then back to ${SNAP_ROOT}, "<emphasis role="bold">software</emphasis>" directory includes libsnap, header files and some tools. "<emphasis role="bold">hardware</emphasis>" directory is the main focus. <emphasis role="bold">deconfig</emphasis> has the config files for silent testing purpose, and <emphasis role="bold">scripts</emphasis> has the menu settings and other scripts. </para>
+    <para>
+    How does SNAP work and what are the files used in each step? 
+    </para>
+    <itemizedlist>
+    <listitem><para><emphasis role="bold">make snap_config</emphasis>: The menu to select cards and other options is controlled by "script/Kconfig"</para></listitem>
+    <listitem>
+    <para><emphasis role="bold">make model</emphasis>: This step creates a Vivado project. It firstly calls "hardware/setup/<emphasis role="bold">create_snap_ip.tcl</emphasis>" to generate the IP files in use, then calls "hardware/setup/<emphasis role="bold">create_framework.tcl</emphasis>" to build the project. About create_framework.tcl: </para>
+    <itemizedlist>
+    <listitem>
+    <para>It adds BSP (board support package). In CAPI1.0, it is also called PSL Checkpoint file (b_route_design.dcp) or base_image. It uses the path pointed to b_route_design.dcp and adds it into the design. In CAPI2.0, it will call the make process in capi2-bsp submodule to generate "capi_bsp_wrap" if it doesn't exist. If you have already successfully generated it, this step is skipped. Then "create_framework.tcl"  adds the capi_bsp_wrap (xcix or xci file) into the design.</para>
+    </listitem>
+    <listitem>
+    <para>It adds FPGA top files and snap_core files (in hardware/hdl/core).</para>
+    </listitem>
+    <listitem>
+    <para>It adds constrain files: in hardware/setup/${FPGACARD} or in hardware/capi2-bsp/${FPGACARD}</para>
+    </listitem>
+    <listitem>
+    <para>It adds user files (in actions/${ACTION_NAME}/hw). User's action hardware uses top file named "action_wrapper.vhd"</para>
+    </listitem>
+    <listitem>
+    <para>It adds simulation files (in hardware/sim/core) including simulation top files and simulation models. (If "no_sim" is selected in snap_config menu, this step is skipped.)</para>
+    </listitem>
+    </itemizedlist>
+    <para>After above steps, "<emphasis role="bold">viv_project</emphasis>" is created. You can open it with Vivado GUI, and check the design hierarchy. And it will call the selected simulator to compile the simulation model.</para>
+    </listitem>
+    <listitem>
+    <para><emphasis role="bold">make image</emphasis>: This step runs synthesis, implementation and bitstream generation. It calls "hardware/setup/<emphasis role="bold">snap_build.tcl</emphasis>" and also uses some related tcl scripts to work on "viv_project". In this step, "hardware/build" will be created and the output products like bit images, checkpoints (middle products for debugging) and reports (reports of timing, clock, IO, utilization, etc.) If everything runs well and timing passes, user will get the bitstream files (in "<emphasis role="bold">build</emphasis>/Images" sub directory) to program the FPGA card. </para>
+    </listitem>
+    </itemizedlist>
+</section>
+<section><title>Modifications to snap git repositories</title>
+    <para>For a new FPGA card, the detailed items to update are listed as below.</para>
+    <itemizedlist>
+    <listitem><para>Hardware RTL, setup, simulation</para></listitem>
+    <listitem><para>Software and tools</para></listitem>
+    <listitem><para>Testing</para></listitem>
+    <listitem><para>Publishing</para></listitem>
+    </itemizedlist>
+
+        <para>The best way is to grep some keywords like "S241" or "AD8K5" under the directories and look for the locations that need modifications.</para>
+        <note>
+        <para>If you meet files ending with "_source", like "psl_fpga.vhd_source", that means this file will be pre-processed to generate the output file without "_source" suffix, like "psl_fpga.vhd". There are <userinput>#ifdef</userinput> macros or comments like <userinput>-- only for NVME_USED=TRUE</userinput>. They help to create a target VHDL/Verilog file with different configurations.</para>
+        </note>
+        <para>Below lists the files to change. There may be some differences with new commits in SNAP git repository. Keep in mind they include:  </para>
+        <itemizedlist>
+        <listitem><para>snap_config and environmental files</para></listitem>
+        <listitem><para>Hardware: psl_accel and psl_fpga (top) RTL files</para></listitem>
+        <listitem><para>Hardware: tcl files for the workflow</para></listitem>
+        <listitem><para>Hardware: Board: xdc files for IO/floorplan/clock/bitstream</para></listitem>
+        <listitem><para>Hardware: DDR: create DDR Memory controller IP (mig) in create_snap_ip.tcl, create DDR memory sim model, and other xdc files</para></listitem>
+        <listitem><para>Hardware: Other IP: create_ip, sim model, xdc files</para></listitem>
+        <listitem><para>Software: New card type, register definition</para></listitem>
+        <listitem><para>Testing: jenkins</para></listitem>
+        <listitem><para>Readme and Documents</para></listitem>
+        </itemizedlist>
+
+        <table frame="all" pgwide="1" xml:id="filelist">
+            <title>Config files to change</title>
+            <tgroup cols="2">
+            <colspec colname="c2" colwidth="25*" />
+            <colspec colname="c3" colwidth="25*" />
+            <thead>
+                <row>
+                <entry>
+                <para>
+                <emphasis role="bold">File name</emphasis>
+                </para>
+                </entry>
+                <entry>
+                <para>
+                <emphasis role="bold">Changes to do</emphasis>
+                </para>
+                </entry>
+                </row>
+            </thead>
+            <tbody>
+                <row>
+                <entry><para>scripts/Kconfig</para></entry>
+                <entry><para>adding card to the Kconfig menu. Provide Flash information (size/type/user address)</para></entry>
+                </row>
+                <row>
+                <entry><para>hardware/doc/SNAP-Registers.md</para></entry>
+                <entry><para>SNAP registers for new card - doc</para></entry>
+                </row>
+                <row>
+                <entry><para>hardware/setup/snap_config.sh</para></entry>
+                <entry><para>SNAP registers - setting</para></entry>
+                </row>
+            </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="all" pgwide="1" xml:id="rtlchange">
+            <title>RTL/xdc/tcl files to change</title>
+            <tgroup cols="2">
+            <colspec colname="c2" colwidth="25*" />
+            <colspec colname="c3" colwidth="25*" />
+            <thead>
+                <row>
+                <entry>
+                <para>
+                <emphasis role="bold">File name</emphasis>
+                </para>
+                </entry>
+                <entry>
+                <para>
+                <emphasis role="bold">Changes to do</emphasis>
+                </para>
+                </entry>
+                </row>
+            </thead>
+            <tbody>
+                <row><entry><para>hardware/hdl/core/psl_accel_${FPGACARD}.vhd_source</para></entry><entry><para> specific to card</para></entry></row>
+                <row><entry><para>hardware/hdl/core/psl_accel_types.vhd_source</para></entry><entry><para>specific to card</para></entry></row>
+                <row><entry><para>hardware/hdl/core/psl_fpga_${FPGACARD}.vhd_source</para></entry><entry><para> specific to card</para></entry></row>
+                <row><entry><para>hardware/setup/${FPGACARD}/capi_bsp_pblock.xdc</para></entry><entry><para> specific to card</para></entry></row>
+                <row><entry><para>hardware/setup/${FPGACARD}/snap_${FPGACARD}.xdc</para></entry><entry><para> specific to card</para></entry></row>
+                <row><entry><para>hardware/setup/${FPGACARD}/snap_ddr4pins.xdc</para></entry><entry><para> specific to card</para></entry></row>
+                <row><entry><para>hardware/setup/build_mcs.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/setup/create_framework.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/setup/create_snap_ip.tcl</para></entry><entry><para>declare card name and the IPs in use</para></entry></row>
+                <row><entry><para>hardware/setup/flash_mcs.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/setup/snap_bitstream_post.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/setup/snap_bitstream_pre.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/setup/snap_bitstream_step.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/setup/snap_impl_step.tcl</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>hardware/sim/ddr4_dimm_???.sv</para></entry><entry><para>DDR memory model for simulation. Please get the information about how many DDR chips are connected together, the density and data width of each chip, and whether there is one chip is used for ECC (redundant). You can take an existing one as a template and modify.</para></entry></row>
+                <row><entry><para>hardware/sim/top_capi?0.sv_source</para></entry><entry><para>Instantiate the DDR memory model</para></entry></row>
+                <row><entry><para>hardware/snap_check_psl (Only for CAPI1.0)</para></entry><entry><para>declare card name</para></entry></row>
+            </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="all" pgwide="1" xml:id="swchange">
+            <title>Software files to change</title>
+            <tgroup cols="2">
+            <colspec colname="c2" colwidth="25*" />
+            <colspec colname="c3" colwidth="25*" />
+            <thead>
+                <row>
+                <entry>
+                <para>
+                <emphasis role="bold">File name</emphasis>
+                </para>
+                </entry>
+                <entry>
+                <para>
+                <emphasis role="bold">Changes to do</emphasis>
+                </para>
+                </entry>
+                </row>
+            </thead>
+            <tbody>
+                <row><entry><para>software/lib/snap.c</para></entry><entry><para>declare card name</para></entry></row>
+                <row><entry><para>software/tools/snap_find_card</para></entry><entry><para>declare card name + SUBSYSTEM_ID</para></entry></row>
+                <row><entry><para>software/include/snap_regs.h</para></entry><entry><para>SNAP registers - setting</para></entry></row>
+            </tbody>
+            </tgroup>
+        </table>
+
+        <table frame="all" pgwide="1" xml:id="otherchange">
+            <title>Other files to change</title>
+            <tgroup cols="2">
+            <colspec colname="c2" colwidth="25*" />
+            <colspec colname="c3" colwidth="25*" />
+            <thead>
+                <row>
+                <entry>
+                <para>
+                <emphasis role="bold">File name</emphasis>
+                </para>
+                </entry>
+                <entry>
+                <para>
+                <emphasis role="bold">Changes to do</emphasis>
+                </para>
+                </entry>
+                </row>
+            </thead>
+            <tbody>
+                <row><entry><para>actions/scripts/snap_jenkins.sh</para></entry><entry><para>jenkins tests (optional)</para></entry></row>
+                <row><entry><para>defconfig/{FPGACARD}*.defconfig</para></entry><entry><para>For silent jenkins testing (optional)</para></entry></row>
+                <row><entry><para>README.md</para></entry><entry><para>Announce a new card is supported </para></entry></row>
+            </tbody>
+            </tgroup>
+        </table>
+</section>
+<section><title>Update capi-utils</title>
+    <para>capi-utils is the third git repository that needs a few modifications. Same as before, fork it, make the modifications and submit a pull request.</para>
+    <screen>git clone https://github.com/[YOUR_USERNAME]/capi-utils</screen>
+    <para>There is only one file to be modified: "psl-devices". Add a new line, for example</para>
+    <screen>0x0665 U200 Xilinx 0x1002000 64 SPIx4</screen>
+    <para>The first column is the SUBSYSTEM_ID, the second column is the Card name, the third is the FPGA Chip Vendor, then it is the User Image starting address on the flash. For SPI device, size of block is 64Bytes. "SPIx4" is the flash interface type. It may also be "DPIx16" or "SPIx8". </para>
+    <para>"SPIx8" uses two bitstreams so another starting address also needs to be provided. And when you call "capi-flash-script" to program the flash, it needs two input bitstream files (primary and secondary).</para>
+
+</section>
+<section><title>Strategy to enable a new card</title>
+    <para>
+    To enable a new card on SNAP, complete following tasks one by one.
+    </para>
+    <section><title>Stage 1: Verify PCIe interface</title>
+        <orderedlist>
+        <listitem><para>Generate capi_bsp_wrap in capi2-bsp.</para></listitem>
+        <listitem><para>Make modifications to snap git repository as described above.</para></listitem>
+        <listitem><para>Select an action example without DDR, for example: hls_helloworld. </para></listitem>
+        <listitem><para>Go through the "make model" and "make image" processes and build the bitstream files. </para></listitem>
+        <listitem><para>Plug the card onto Power9 server and connect a JTAG/USB cable to a laptop. Install Vivado Lab on this laptop (it requires Windows or Linux operating system). Start Vivado Lab tool, open Hardware manager.</para></listitem>
+        <listitem><para>Power on the server. You will see the FPGA target is recognized by Vivado Lab tool.</para></listitem>
+        <listitem><para>Program the generated bitstream files (bin or mcs) to the card. On Vivado Lab tool, select the FPGA chip and right-click, choose "Add Configuration Memory Device..." and program the bin/mcs files to the flash. See in picture <xref linkend="vivado-lab"/> and <xref linkend="jtag"/> </para></listitem>
+        <listitem><para>Wait it done (It may take 10 minutes). Unplug the JTAG/USB cable, reboot the server.</para></listitem>
+        <listitem><para>After the server is booted, log into OS, run <userinput>lspci</userinput> to see if the card is there. (Usually with Device ID 0x0477). Then download snap, capi-utils, libcxl (from github). Go to snap directory, <userinput>make apps</userinput> and run the application. </para></listitem>
+        </orderedlist>
+        <note><para>There is another way to replace step 6 to 8. We call it <emphasis role="bold">"Fast program bit-file when power on"</emphasis>. Prepare the <emphasis role="bold">bit</emphasis> file on laptop in advance. Not like bin/mcs files which are for the flash, the bit file is used to program the FPGA chip directly. When the server is powered on, after Vivado Lad sees the FPGA, right click the device, <userinput>program device ...</userinput> and select the bit file <emphasis role="bold">immediately</emphasis>. This action only takes about 10 seconds and can be done before hostboot on the server starts to scan PCIe devices.</para>
+        <para>You should be aware of the fact that because only FPGA chip is programmed, (the flash memory is empty), when the server is powered off or reboot, FPGA doesn't have electricity so the programming in FPGA chip will be lost.</para>
+        </note>
+
+        <figure pgwide="1" xml:id="vivado-lab">
+            <title>Vivado Lab Edition</title>
+            <mediaobject>
+            <imageobject>
+            <imagedata fileref="figures/vivado-lab.png" format="PNG" scalefit="1" width="70%" align="center" />
+            </imageobject>
+            </mediaobject>
+        </figure> 
+        <figure pgwide="1" xml:id="jtag">
+            <title>Add Configuration Memory Device and Program the flash</title>
+            <mediaobject>
+            <imageobject>
+            <imagedata fileref="figures/jtag.png" format="PNG" scalefit="1" width="100%" align="center" />
+            </imageobject>
+            </mediaobject>
+        </figure> 
+
+        <important>
+        <para>When you download and install <emphasis role="bold">Vivado Lab</emphasis>, please pick up as same version as the Vivado (SDx) that you are using to build images. </para>
+        </important>
+        <para></para>
+        <para>Seeing 0477 by "lspci" is the most important milestone. If not, please do following checking:</para>
+        <itemizedlist>
+        <listitem> <para> Check <emphasis role="bold">dmesg</emphasis>. Run "dmesg &gt; dmesg.log" and search "cxl" in dmesg.log file.</para></listitem>
+        <listitem> <para> Check file "/sys/firmware/opal/msglog" to see whether there are link training failed messages. A successful message looks like this, which means this PCIe device has been scanned and recognized. The number followed "PHB#" is the PCIe device identifier in the format of "domain:bus:slot.func". You can see it by "lspci" also. </para>
+        <screen>[   63.403485191,5] PHB#0000:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=CPU1 Slot2 (16x)
+[   63.403572553,5] PHB#0000:01:00.0 [EP  ] 1014 0477 R:02 C:1200ff (        device) LOC_CODE=CPU1 Slot2 (16x)</screen>
+        </listitem> 
+        <listitem> <para> Check create_ip.tcl in capi2-bsp/[FPGACARD]/tcl and check the configuration of PCIHIP core.</para></listitem>
+        </itemizedlist>
+        <para>If your PCIe device has been recognized as CAPI, do "ls /dev/cxl" and you can see "afu*" devices. Then your application software can open the device like operating an ordinary file.</para>
+        <para>Some other useful commands to check PCIe config (with the right PCIe identifier "domain:bus:slot.func") </para>
+        <screen>sudo lspci -s 0000:01:00.0 -vvv</screen>
+        <para>For example, you can check the settings coded in Xilinx PCIHIP core, like SUBSYSTEM_ID:</para>
+        <screen>0000:01:00.0 Processing accelerators: IBM Device 0477 (rev 02) (prog-if ff)
+	Subsystem: IBM Device 0660</screen>
+        <para>Link Speed</para>
+        <screen>LnkSta:	Speed 8GT/s, Width x16, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-</screen>
+        <para>Vital Product Data which was coded in capi_vsec.vhdl</para>
+        <screen>Capabilities: [b0] Vital Product Data
+Product Name: U200 PCIe CAPI2 Adapter
+Read-only fields:
+	[PN] Part number: Xilinx.U200
+	[V1] Vendor specific: 0000000000000000
+	[V2] Vendor specific: 0000000000000000
+	[V3] Vendor specific: 0000000000000000
+	[V4] Vendor specific: 0000000000000000
+	[RV] Reserved: checksum good, 3 byte(s) reserved
+End</screen>
+        <para>And see VSEC and kernel module:</para>
+        <screen>Capabilities: [400 v1] Vendor Specific Information: ID=1280 Rev=0 Len=080 &lt;?&gt;
+Kernel driver in use: cxl-pci
+Kernel modules: cxl</screen>
+
+    </section>
+    <section><title>Stage 2: Verify Flash interface</title>
+        <para>Use <link xlink:href="https://github.com/ibm-capi/capi-utils">capi-utils</link> to program the bitstream files. If it succeeds, it proves that the Flash interface has been configured correctly. After this step, you can get rid of JTAG connector and use "capi-flash-script" to program the FPGA bitstreams. </para>
+        <para>The mechanic behind "capi-flash-script" is: </para>
+        <para>There is a flash controller on FPGA (in capi_bsp_wrap), and it connects to PCIe config space. The flash controller exposes four VSEC registers to allow host system to control. They are "Flash Address Register", "Flash Size Register", "Flash Status/Control Register" and "Flash Data Port". See in <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/hwarch-caia-spec/content/ch_preface.html">Coherent Accelerator Interface Architecture</link>, Chapter 12.3, "CAIA Vendor-Specific Extended Capability Structure". So capi-utils src C file reads FPGA bitstream "bin" file, and writes the bytes to VSEC "Flash Data Port" register. So the bytes are sent to PCIe, through Flash controller and finally arrive to flash memory on the card.</para>
+    </section>
+
+    <section><title>Stage 3: Verify DDR interface</title>
+        <orderedlist>
+        <listitem><para>Select another action example (hdl_example with DDR) or hls_memcopy.</para></listitem>
+        <listitem><para>"make model" and "make sim". Make sure the DDR simulation model works well.</para></listitem>
+        <listitem><para>"make image" to generate the bitstream files.</para></listitem>
+        <listitem><para>Use capi-utils to program the bitstream "bin" file to the card.</para></listitem>
+        <listitem><para>Run the application to see whether it works.</para></listitem>
+        </orderedlist>
+        <para>Basically SNAP only implemented 1 DDR Bank (or channel) while most cards have 2 to 4 banks. (N250S+ is one of the rare card which has only 1 DDR bank). The main reason was that depending on user's needs, there are two options: the first is to just extend the size of the first bank by adding this 2nd bank on the same DDR memory controller. The other option is to use 2 (or more) memory controllers in parallel to have a higher throughput. This later option means that you will need to duplicate the DDR memory controller in place and this will take twice the place in the design. In this case, the action_wrapper also requires change to add the additional DDR ports. For HLS design, another HLS DDR port should be added into "actions/[YOUR_ACTION]/hw/XXX.CPP". As for an opensource project, everyone is welcomed to add your contribution by implementing it and add it to the SNAP design.</para>
+    </section>
+
+
+
+    <section><title>Stage 4: Verify Other IO interface</title>
+        <para>This step is decided by the card's capabilities and the specific IOs that the card can provide. Like the second or more DDR channels, user can add their code for other IO interface freely. </para>
+    </section>
+
+
+    <section><title>Stage 5: Performance Validation</title>
+        <para>You can check the result of "snap/actions/hls_memcopy/tests/test_*_throughput.sh" for bandwidth and "snap/actions/hls_latency_eval/test/test*.sh" for latency.  </para>
+    </section>
+
+    <section><title>Stage 6: Pressure Test</title>
+        <para>Prepare bitstream files for basic tests, throughput tests, latency tests, max-power tests. Adding image flashing tests, card reset tests and others. Run them intensively.</para>
+    </section>
+</section>
+<section><title>Cleanup and submit</title>
+    <para>Now a new FPGA card has been enabled to CAPI2.0 SNAP. Cleanup your workspace, check files and submit your work!</para> 
+    <para>capi-utils is independent. Just create a pull request and assign a reviewer. It can only been merged into master branch after having been reviewed.</para>
+    <para>Submit the pull request of your "capi2-bsp fork" before "snap fork". After capi2-bsp is merged intohttps://github.com/open-power/capi2-bsp master branch, update the submodule pointer to the latest "open-power/capi2-bsp" master and then submit the pull request of your forked snap.</para>
+</section>
+
+</chapter>
+
+
+
