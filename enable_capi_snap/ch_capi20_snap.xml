@@ -289,20 +289,29 @@ git submodule update</screen>
         <important>
         <para>When you download and install <emphasis role="bold">Vivado Lab</emphasis>, please pick up as same version as the Vivado (SDx) that you are using to build images. </para>
         </important>
-        <para></para>
-        <para>Seeing 0477 by "lspci" is the most important milestone. If not, please do following checking:</para>
-        <itemizedlist>
-        <listitem> <para> Check <emphasis role="bold">dmesg</emphasis>. Run "dmesg &gt; dmesg.log" and search "cxl" in dmesg.log file.</para></listitem>
-        <listitem> <para> Check file "/sys/firmware/opal/msglog" to see whether there are link training failed messages. A successful message looks like this, which means this PCIe device has been scanned and recognized. The number followed "PHB#" is the PCIe device identifier in the format of "domain:bus:slot.func". You can see it by "lspci" also. </para>
-        <screen>[   63.403485191,5] PHB#0000:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=CPU1 Slot2 (16x)
+        <para> <emphasis role="bold">Tips to help you debug:</emphasis></para>
+        <orderedlist>
+                <listitem><para>Seeing 0477 by "lspci" is the most important milestone. If not, please check file "<emphasis role="bold">/sys/firmware/opal/msglog</emphasis>" to see whether there are link training failed messages. A successful message looks like this, which means this PCIe device has been scanned and recognized. The number followed "PHB#" is the PCIe device identifier in the format of "domain:bus:slot.func". You can see it by "lspci" also.:</para>
+<screen>[   63.403485191,5] PHB#0000:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=CPU1 Slot2 (16x)
 [   63.403572553,5] PHB#0000:01:00.0 [EP  ] 1014 0477 R:02 C:1200ff (        device) LOC_CODE=CPU1 Slot2 (16x)</screen>
-        </listitem> 
-        <listitem> <para> Check create_ip.tcl in capi2-bsp/[FPGACARD]/tcl and check the configuration of PCIHIP core.</para></listitem>
-        </itemizedlist>
+                </listitem>
+                <listitem> <para> Check <emphasis role="bold">dmesg</emphasis>. Run "dmesg &gt; dmesg.log" and search "cxl" in dmesg.log file. A normal output should be look like this</para>
+                        <screen>[    9.301403] cxl-pci 0000:01:00.0: Device uses a PSL9
+[    9.301523] cxl-pci 0000:01:00.0: enabling device (0140 -> 0142)
+[    9.303327] cxl-pci 0000:01:00.0: PCI host bridge to bus 0006:00
+[    9.306749] cxl afu0.0: Activating AFU directed mode</screen>
+                </listitem>
+                <listitem><para>Today most of the linux kernel versions already include cxl module. If you doubt this, please check by</para>
+                        <screen>modinfo cxl</screen>
+                </listitem>
+
+        <listitem> <para> Check create_ip.tcl in capi2-bsp/[FPGACARD]/tcl and check the configuration of PCIe core.</para>
         <para>If your PCIe device has been recognized as CAPI, do "ls /dev/cxl" and you can see "afu*" devices. Then your application software can open the device like operating an ordinary file.</para>
+        <screen>ls /dev/cxl
+afu0.0m  afu0.0s</screen>
         <para>Some other useful commands to check PCIe config (with the right PCIe identifier "domain:bus:slot.func") </para>
         <screen>sudo lspci -s 0000:01:00.0 -vvv</screen>
-        <para>For example, you can check the settings coded in Xilinx PCIHIP core, like SUBSYSTEM_ID:</para>
+        <para>For example, you can check the settings coded in Xilinx PCIe core, like SUBSYSTEM_ID:</para>
         <screen>0000:01:00.0 Processing accelerators: IBM Device 0477 (rev 02) (prog-if ff)
 	Subsystem: IBM Device 0660</screen>
         <para>Link Speed</para>
@@ -322,6 +331,48 @@ End</screen>
         <screen>Capabilities: [400 v1] Vendor Specific Information: ID=1280 Rev=0 Len=080 &lt;?&gt;
 Kernel driver in use: cxl-pci
 Kernel modules: cxl</screen>
+</listitem>
+        <listitem>
+        <para>If nothing shows by "ls /dec/cxl", you should check PCIe config space by</para>
+        <screen>sudo hexdump /sys/bus/pci/devices/0000\:00\:00.1/config
+        </screen>
+        <para>Please change the PCIe device identifier (0000:00:00.1) accordingly. Make sure you have seen the VSEC is properly linked. If not, go back to check your VSEC address in capi_vsec.vhdl in last chapter.</para>
+        <screen>0000000 1014 0477 0146 0010 ff02 1200 0000 0000
+0000010 000c 0000 2200 0006 000c 1000 2200 0006
+0000020 000c 0000 0000 0002 0000 0000 1014 0668
+0000030 0000 0000 0040 0000 0000 0000 00ff 0000
+0000040 4801 0003 0008 0000 7005 0080 0000 0000
+0000050 0000 0000 0000 0000 0000 0000 0000 0000
+0000060 7011 0000 0000 0000 0000 0000 0000 0000
+0000070 b010 0002 8022 0000 2950 0000 f103 0043
+0000080 0000 1103 0000 0000 0000 0000 0000 0000
+0000090 0000 0000 0016 0000 0010 0000 000e 0000
+00000a0 0003 001e 0000 0000 0000 0000 0000 0000
+00000b0 0003 0000 2082 5300 0000 0000 0000 0000
+00000c0 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0000100 0001 1c01 0000 0000 0000 0044 2030 0046 --> next_ptr: 1c0
+0000110 0000 0000 e000 0000 0000 0000 0000 0000
+0000120 0000 0000 0000 0000 0000 0000 0000 0000
+*
+00001c0 0019 1f01 0000 0000 0000 0000 0000 0000 --> next_ptr: 1f0
+00001d0 0000 0000 0000 0000 0000 0000 0000 0000
+*
+00001f0 0002 e801 0000 0000 0000 3100 0000 0000 --> e80 (or 400) points to VSEC
+0000200 0000 0000 00ff 8000 0000 0000 0000 0000
+0000210 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0000e80 000b 0001 1280 0800 0801 0021 0006 0200 --> VSEC; e80 matches here
+0000e90 0000 b000 0000 0000 0000 0000 0000 0000
+0000ea0 0100 0000 0040 0000 0200 0000 0400 0000
+0000eb0 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0000ed0 0000 0000 0000 0000 0000 8000 0000 0000
+0000ee0 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0001000</screen>
+        </listitem>
+        </orderedlist>
 
     </section>
     <section><title>Stage 2: Verify Flash interface</title>
@@ -358,8 +409,12 @@ Kernel modules: cxl</screen>
 </section>
 <section><title>Cleanup and submit</title>
     <para>Now a new FPGA card has been enabled to CAPI2.0 SNAP. Cleanup your workspace, check files and submit your work!</para> 
-    <para>capi-utils is independent. Just create a pull request and assign a reviewer. It can only been merged into master branch after having been reviewed.</para>
-    <para>Submit the pull request of your "capi2-bsp fork" before "snap fork". After capi2-bsp is merged intohttps://github.com/open-power/capi2-bsp master branch, update the submodule pointer to the latest "open-power/capi2-bsp" master and then submit the pull request of your forked snap.</para>
+    <itemizedlist>
+    <listitem><para>capi-utils is independent. Just create a pull request and assign a reviewer. It can only been merged into master branch after having been reviewed.</para></listitem>
+    <listitem><para>Submit the pull request of your "capi2-bsp fork" before "snap fork". Assign the reviewer and wait capi2-bsp to be merged into https://github.com/open-power/capi2-bsp master branch</para></listitem>
+    <listitem><para>Update the submodule pointer to the latest "open-power/capi2-bsp" master and then submit the pull request of your forked snap.</para></listitem>
+    </itemizedlist>
+    
 </section>
 
 </chapter>

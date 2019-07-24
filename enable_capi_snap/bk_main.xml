@@ -32,7 +32,7 @@
   xml:id="bk_main">
 
     <!-- TODO: Pick a Title for the new document -->
-    <title>Enable new FPGA card for CAPI2.0</title>
+    <title>Enable new FPGA cards for CAPI2.0</title>
     <!-- TODO: Either add a subtitle or remove the following line -->
     <subtitle>BSP and SNAP</subtitle>
 
