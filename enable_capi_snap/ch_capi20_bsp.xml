@@ -116,14 +116,14 @@
         <para> Choose an existing card as a base. Copy the folder to your new FPGACARD name. Then modify the contents according to the information collected from FPGA supplier.</para>
         <important><para> Make sure the information in xdc/tcl files are permitted to be open-source. </para></important>
         <para>There are some other modifications you should pay attention to:</para>
-        <itemizedlist>
+        <orderedlist>
             <listitem> <para>Send email to OpenPower Acceleration Workgroup or contact your representative to apply for a <emphasis  role="bold">subsystem device ID</emphasis> for the new card. For example, ADKU3 uses 0x0605. S241 uses 0x0660. The information needs to be filled in "[FPGACARD]/tcl/create_ip.tcl", <userinput>CONFIG.PF0_SUBSYSTEM_ID</userinput></para>
         </listitem>
         <listitem> <para> As a CAPI device, you need to make sure PF0 (physical function) has <userinput>PF0_DEVICE_ID=0477</userinput> and <userinput>PF0_SUBSYSTEM_VENDOR_ID=1014</userinput>. This is required by the linux kernel module cxl <link xlink:href="https://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux.git/tree/drivers/misc/cxl/pci.c">(pci.c)</link>, otherwise the card will not be recognized as a CAPI card by system. </para>
         </listitem>
         <listitem>
         <para>If you are using Xilinx VU33P or VU37P who have HBM, this is actually a new FPGA family "virtexuplushbm". Or if you are using other new FPGA Production family, additional steps need to take:</para>
-        <orderedlist>
+        <itemizedlist>
         <listitem><para>capi2-bsp/psl/create_ip.tcl: "set_property supported_families ...", add new family name like "virtexuplushbm Production"</para></listitem>
         <listitem><para>capi2-bsp/common/tcl/create_capi_bsp.tcl: "set_property supported_families ...", do the same as above.</para></listitem>
         <listitem><para>Add family support to PSL9 ZIP package: unzip the package, do the hacking, and zip them back again.</para>
@@ -132,21 +132,30 @@
 zip -r ibm.com_CAPI_PSL9_WRAP_2.00.zip component.xml src/ xgui/
 rm -fr component.xml src/ xgui/</screen>
         </listitem>
-        </orderedlist>
+        </itemizedlist>
+        </listitem>
+
+        <listitem><para><emphasis role="bold">VSEC starting address: </emphasis> VSEC (Vendor Specific Extended Capability Structure) is a part of PCIe capability list architecture. It needs to be properly linked in PCIe config space. File "capi2-bsp/[FPGACARD]/src/capi_vsec.vhdl, vsec_addr[21:32] defines the address for VSEC. It should be matched with PCIe core value <emphasis role="bold">PF0_SECONDARY_PCIE_CAP_NEXTPTR</emphasis>. Take card U200 for example, its vsec_addr[21:32] starts from 12'h400 (12'b0100_0000_0000), and there is a patch_ip.tcl to modify the pcie4 core's default value 12'h480 to 12'h400. (Actually this is a historical workaround, because Xilinx had modified its extended capability starting address from 12'h400 to 12'h480 on one version. The patch is "tcl/patch_ip.tcl" </para>
+                <screen>exec /bin/bash -c "sed -i \"s/PF0_SECONDARY_PCIE_CAP_NEXTPTR=0x480/PF0_SECONDARY_PCIE_CAP_NEXTPTR=0x400/\" $pcie_source"
+exec /bin/bash -c "sed -i \"s/PF0_SECONDARY_PCIE_CAP_NEXTPTR('H480)/PF0_SECONDARY_PCIE_CAP_NEXTPTR('H400)/\" $pcie_source"</screen>
+                <para>About Xilinx PCIe code information for extended configuration space, you can find it on PG156 (for Ultrascale Device) or PG213 (for Ultrascale+ Device). </para>
+                <para>For Ultrascale+ HBM device, pcie4c core, the VSEC starts from 12'hE80. At this time vsec_addr must be changed in capi_vsec.vhdl. And the above two lines in patch_ip.tcl should be disabled.</para>
+
         </listitem>
         <listitem>
-        <para>Source files under "capi2-bsp/[FPGACARD]/src": capi_xilmltbt.vhdl. Edit the User image starting address "wbstart_addr". </para>
+            <para><emphasis role="bold">Vital Product Data: </emphasis>Source files under "capi2-bsp/[FPGACARD]/src": capi_vsec.vhdl. <emphasis  role="bold">This step is optional.</emphasis> Edit the hardcoded "vpd44data_be" to add VPD (Vital Product Data) information. Ideally this information should be read from an I2C EEPROM. The FPGA supplier wrote the content of EEPROM before shipping. However, today we take the simpliest way to write some hard coded value. "capi2-bsp/common/script" has a script "gen_vsec.sh" to help you do this. </para>
+        </listitem>
+
+        <listitem>
+        <para><emphasis role="bold">User Image Address: </emphasis>Source files under "capi2-bsp/[FPGACARD]/src": capi_xilmltbt.vhdl. Edit the User image starting address "wbstart_addr". </para>
         <screen>wbstart_addr &lt;=  "User_image_address"  when (cpld_user_bs_req = '1') else "00000000000000000000000000000000";</screen>
         <para>capi_xilmltbt.vhdl has a Xilinx multi-boot core. That means you can create two kinds of images: Factory image and User image. Factory images will be placed at address 0 of FPGA Flash, and User image will be placed at "User_image_address" on the flash. When power-on or the FPGA card is reset, the multiboot core knows where to load the image. Usually we put a Golden factory image on address 0 and never change it, and multiboot core always tries to load user image first. If the user image has something wrong, multiboot logic will tell the FPGA to "fallback" to factory image. You still see the card in the system and you can just program a new user image to try again. </para>
-        </listitem>
-        <listitem>
-            <para>Source files under "capi2-bsp/[FPGACARD]/src": capi_vsec.vhdl. <emphasis  role="bold">This step is optional.</emphasis> Edit the hardcoded "vpd44data_be" to add VPD (Vital Product Data) information. Ideally this information should be read from an I2C EEPROM. The FPGA supplier wrote the content of EEPROM before shipping. However, today we take the simpliest way to write some hard coded value. "capi2-bsp/common/script" has a script "gen_vsec.sh" to help you do this. </para>
         </listitem>
 
         <listitem>
         <para> Check Vivado Version. Make sure this version of Vivado tool supports the FPGA part name you have assigned in "capi2-bsp/[FPGACARD]/Makefile". For some very new FPGA chip types, in one Vivado version they may have a suffix of "es" (engineering sample), and in a newer Vivado version the "es" suffix is removed.</para>
         </listitem>
-        </itemizedlist>
+        </orderedlist>
     </section>
     <section><title>Generate capi_bsp_wrap</title>
         <screen>cd capi2-bsp
