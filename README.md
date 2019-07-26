@@ -1,4 +1,4 @@
-# OpenPOWER Foundation Documentation Development Guide
+# OpenPOWER Foundation CAPI SNAP Enablement Documentation
 This repository holds the source for the *TBD*
 for OpenPOWER Foundation. 
 
