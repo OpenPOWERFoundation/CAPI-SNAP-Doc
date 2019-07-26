@@ -1,9 +1,6 @@
 # OpenPOWER Foundation Documentation Development Guide
-This repository holds the source for the *Documentation Development Guide*
-(formerly *Master Template Document*) for 
-OpenPOWER Foundation. The PDF and HTML generated from the ``doc_dev_guide``
-directory build a document that both describes how to build a new
-document and contains examples and directions on how to do it.
+This repository holds the source for the *TBD*
+for OpenPOWER Foundation. 
 
 To build this project, one must ensure that the Docs-Master project has
 also been cloned at the same directory level as the Docs-Template project.
@@ -15,34 +12,20 @@ This can be accomplished with the following steps:
   $ git clone https://github.com/OpenPOWERFoundation/Docs-Master.git
   ```
   
-2. Clone this project (Docs-Template) using the following command:
+2. Clone this project (CAPI-SNAP-Doc) using the following command:
 
   ```
-  $ git clone https://github.com/OpenPOWERFoundation/Docs-Template.git
+  $ git clone https://github.com/OpenPOWERFoundation/CAPI-SNAP-Doc.git
   ```
   
 3. Build the project with these commands:
   ```
-  $ cd Docs-Template
+  $ cd CAPI-SNAP-Doc
   $ mvn clean generate-sources
   ```
 
 The online version of the document can be found in the OpenPOWER Foundation
-Document library at [OpenPOWER Foundation Documentation Development Guide](http://openpowerfoundation.org/?resource_lib=openpower-foundation-documentation-development-guide).  
-
-An introductory video on how to develop in the OpenPOWER Foundation
-Docbook environment has been created and posted on YouTube.
-
-*[![OpenPOWER Docbook Development Overview](https://i.ytimg.com/vi/psh8xd4HRlo/hqdefault.jpg)](https://www.youtube.com/watch?v=psh8xd4HRlo "OpenPOWER Docbook Development Overview")*
-
-The project which controls the look and feel of the document is the 
-[Docs-Maven-Plugin project](https://github.com/OpenPOWERFoundation/Docs-Maven-Plugin), an 
-OpenPOWER Foundation private project on GitHub.  To obtain access to the Maven Plugin project, 
-contact Jeff Scheel \([scheel@us.ibm.com](mailto://scheel@us.ibm.com)\).
-
-Additional sub-directories of interest in this project are:
-- ``doc_template``: provides a template for new specifications from scratch
-- ``errata_template``: provide a template for errata documents
+Document library at [TBD](http://openpowerfoundation.org/?TBD).  
 
 ## License
 This project is licensed under the Apache V2 license.  More information
@@ -52,13 +35,12 @@ can be found in the LICENSE file or online at
 
 ## Community
 To comment on, propose changes, and engage in community dialogue, you can open issues 
-in the [Project Issues](https://github.com/OpenPOWERFoundation/Docs-Template/issues), post to
-the community mailing list \([syssw-doc_devel_guide@mailinglist.openpowerfoundation.org](mailto://syssw-doc_devel_guide@mailinglist.openpowerfoundation.org)\), or 
-join the #doc-devel channel in the OpenPOWER Foundation Slack room \([openpowerfoundation.slack.com](https://openpowerfoundation.slack.com/)\).
+in the [Project Issues](https://github.com/OpenPOWERFoundation/CAPI-SNAP-Doc/issues), post to
+the community mailing list \([TBD@mailinglist.openpowerfoundation.org](mailto://TBD@mailinglist.openpowerfoundation.org)\).
 
 ## Contributions
 To contribute to the OpenPOWER Foundation template document project, post patches to the community mailing list
-\([syssw-doc_devel_guide@mailinglist.openpowerfoundation.org](mailto://syssw-doc_devel_guide@mailinglist.openpowerfoundation.org)\) where they
+\([TBD@mailinglist.openpowerfoundation.org](mailto://TBD@mailinglist.openpowerfoundation.org)\) where they
 will be reviewed and approved when ready.
 
 Contributions to this project should conform to the `Developer Certificate
