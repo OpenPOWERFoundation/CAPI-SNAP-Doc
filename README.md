@@ -1,5 +1,5 @@
 # OpenPOWER Foundation CAPI SNAP Enablement Documentation
-This repository holds the source for the *TBD*
+This repository holds the source for the *Enable new FPGA Cards for CAPI2.0*
 for OpenPOWER Foundation. 
 
 To build this project, one must ensure that the Docs-Master project has
@@ -36,13 +36,9 @@ can be found in the LICENSE file or online at
 ## Community
 To comment on, propose changes, and engage in community dialogue, you can open issues 
 in the [Project Issues](https://github.com/OpenPOWERFoundation/CAPI-SNAP-Doc/issues), post to
-the community mailing list \([TBD@mailinglist.openpowerfoundation.org](mailto://TBD@mailinglist.openpowerfoundation.org)\).
+the community mailing list \([capi-snap-doc@mailinglist.openpowerfoundation.org](mailto://capi-snap-doc@mailinglist.openpowerfoundation.org)\).
 
 ## Contributions
-To contribute to the OpenPOWER Foundation template document project, post patches to the community mailing list
-\([TBD@mailinglist.openpowerfoundation.org](mailto://TBD@mailinglist.openpowerfoundation.org)\) where they
-will be reviewed and approved when ready.
-
 Contributions to this project should conform to the `Developer Certificate
 of Origin` as defined at http://elinux.org/Developer_Certificate_Of_Origin.
 Commits to this project need to contain the following line to indicate
