@@ -94,8 +94,8 @@
                                        questions about which value to select.
                                        
                                        If no value is provided below, the document will default to "Work Group Notes".-->
-                            <!--workProduct>workgroupNotes</workProduct-->
-                            <workProduct>workgroupSpecification</workProduct>
+                            <workProduct>workgroupNotes</workProduct>
+                            <!--workProduct>workgroupSpecification</workProduct -->
                             <!-- workProduct>candidateStandard</workProduct -->
                             <!-- workProduct>openpowerStandard</workProduct -->
 
