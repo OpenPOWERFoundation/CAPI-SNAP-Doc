@@ -40,9 +40,9 @@
     <author>
       <!-- TODO: Set the correct Work Group Name and email id for WG Chair -->
       <personname>
-          Acceleration Workgroup
+          System Software Workgroup
       </personname>
-      <email>aclwg-chair@openpowerfoundation.org</email>
+      <email>???wg-chair@openpowerfoundation.org</email>
       <affiliation>
           <orgname>OpenPower Foundation</orgname>
       </affiliation>
@@ -68,11 +68,11 @@
                Work Group name, and Work Product track (both in second paragraph). -->
     <abstract>
       <!-- TODO: remove "phrase" tags (2) and text below and insert proper information -->
-      <para>The purpose of this document is to describe how to enable a new customer card on CAPI SNAP framework. SNAP is a open-sourced programming framework for FPGA Acclerations. Its homepage is <link xlink:href="https://github.com/open-power/snap">https://github.com/open-power/snap</link>. With it, you can develop accelerations with Power and CAPI technology easily.</para>
+      <para>The purpose of this document is to describe how to enable a new customer card to support CAPI SNAP framework. SNAP is a open-source programming framework for FPGA Accelerations. Its homepage is <link xlink:href="https://github.com/open-power/snap">https://github.com/open-power/snap</link>. With it, you can develop accelerators with CAPI technology easily.</para>
       
-      <para>This document describes the flow and steps to enable a new PCIe FPGA card to have or CAPI2.0 capability. Firstly, please check whether your PCIe FPGA card is listed on today's "SNAP enabled cards" (On the homepage README of <link xlink:href="https://github.com/open-power/snap">SNAP Github</link>), if not, this document will guide you on <emphasis role="bold">how to enable it</emphasis>. Since all of the project files are open-sourced, you can create a Github repository fork, and create a new board support package (BSP) and walk through the entire working flow to enable SNAP. </para>
+      <para>This document describes the flow and steps to enable a new PCIe FPGA card to be able to run in CAPI2.0 mode, and to support SNAP framework. If your PCIe FPGA card is not listed on today's available "SNAP enabled cards" (On the homepage README of <link xlink:href="https://github.com/open-power/snap">SNAP Github</link>), this document will guide you on <emphasis role="bold">how to enable it</emphasis>. Since all of the project files are open-source, you can create a Github repository fork, and create a new board support package (BSP) and walk through the working flow to enable SNAP. </para>
 
-      <para>This document is a Workgroup Note owned by the Acceleration Workgroup and handled in compliance with the requirements outlined in the
+      <para>This document is a Workgroup Note owned by the System Software Workgroup and handled in compliance with the requirements outlined in the
       <citetitle>OpenPOWER Foundation Work Group (WG) Process</citetitle> document.  It was
       created using the <citetitle>Master Template Guide</citetitle> version &template_version;.
       Comments, questions, etc. can be submitted to the
