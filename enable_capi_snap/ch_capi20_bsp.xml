@@ -18,11 +18,11 @@
                                      xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_capi20_bsp">
 
 <!-- Chapter Title goes here. -->
-<title>Enable CAPI2.0 BSP</title>
-<section><title>Diagram</title>
+<title  xml:id="chapter_capi20_bsp_title">Enable CAPI2.0 BSP</title>
+<section><title>Structure</title>
     <para>Each card supplier may design their FPGA board with different FPGA chips, circuit components, memory and IOs, so BSP (Board support package) is different from card to card. That's why an open-sourced project is so helpful: It allows card supplier and every developer to explore the functions of the card freely, and get benefits from CAPI technology. </para>
     <figure pgwide="1" xml:id="capi2-bsp">
-        <title>CAPI2.0: capi2-bsp (capi_bsp_wrap.xcix)</title>
+        <title>Project hierarchy for HDK mode</title>
         <mediaobject>
         <imageobject>
         <imagedata fileref="figures/bsp.png" format="PNG" scalefit="1" width="90%" align="center" />
@@ -47,18 +47,17 @@
     <para> At least Flash interface pins and PCIe interface pins are required to be assigned in xdc files precisely.</para>
 
     <para> Between capi_bsp_wrap and user AFU (psl_accel), there are 6 groups of signals: Command, DMA, Buffer, Response, MMIO and Control. Please refer to <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/v2-psl-afu-spec/content/ch_preface.html"> CAPI2.0 PSL/AFU interface Spec</link> for the details. </para>
-    <note><para>The logic in CAPI2.0 <emphasis  role="bold">snap_core</emphasis> implemented the data path with DMA interface. Buffer interface is not used. </para></note>
-</section>
+   </section>
 
 <section><title>Step-by-step guidance</title>
     <section><title>Work on github</title>
         <para>capi2-bsp is a public Github repository. You need to have a Github account first. Then create a "fork" (Click the "fork" button) on <link xlink:href="https://github.com/open-power/capi2-bsp">https://github.com/open-power/capi2-bsp</link>.</para>
         <screen>git clone https://github.com/[YOUR_USERNAME]/capi2-bsp</screen>
-        <note><para>Actually capi2-bsp is a submodule of snap. That will be introduced later.</para></note>
-        <para>Keep working on your own capi2-bsp fork, when it has been validated to work well, submit a pull request to "open-power/capi2-bsp" and require merging into the public upstream.</para>
+        <note><para>capi2-bsp is also a submodule of snap.</para></note>
+        <para>Keep working on your own capi2-bsp fork, when it has been validated to work well, submit a pull request to "open-power/capi2-bsp" and request merging into the public upstream.</para>
     </section>
     <section><title>Preparations</title>
-        <para>First, define a FPGACARD name. It can start from the company's name, followed with the card name and be short. For example. ADKU3 = Alpha-Data ADM-PCIE-KU3. Get information from the card supplier.</para>
+        <para>First, define a FPGACARD name. It can start from the company's name, following with the card name and be short. For example, ADKU3 = Alpha-Data ADM-PCIE-KU3. Get information from the card supplier.</para>
         <!-- A table starts -->
         <table frame="all" pgwide="1" xml:id="supplier-info">
             <title>Information to collect</title>
@@ -117,50 +116,71 @@
         <important><para> Make sure the information in xdc/tcl files are permitted to be open-source. </para></important>
         <para>There are some other modifications you should pay attention to:</para>
         <orderedlist>
-            <listitem> <para>Send email to OpenPower Acceleration Workgroup or contact your representative to apply for a <emphasis  role="bold">subsystem device ID</emphasis> for the new card. For example, ADKU3 uses 0x0605. S241 uses 0x0660. The information needs to be filled in "[FPGACARD]/tcl/create_ip.tcl", <userinput>CONFIG.PF0_SUBSYSTEM_ID</userinput></para>
+                <listitem><para><emphasis role="underline">PCIe core IP creation:</emphasis></para>
+            <itemizedlist>
+                <listitem><para>"Vendor ID" and "Device ID" have to be 0x1014 and 0x0477, so kernel module cxl can recognize the card as a CAPI device. (See in <link xlink:href="https://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux.git/tree/drivers/misc/cxl/pci.c">pci.c</link>)</para></listitem>
+                <listitem><para>If the card vendor has a code allocated by PCISIG (See in <link xlink:href="https://pcisig.com/membership/member-companies">PCISIG Member companies</link>), use it as "Subsystem Vendor ID". "Subsystem Device ID" can be chosen freely. </para></listitem>
+                <listitem><para>If the card vendor doesn't have a code allocated by PCISIG, or just for testing and evaluation purpose, please use default "Subsystem Vendor ID" = 0x1014, and send email to <email>aclwg-chair@openpowerfoundation.org</email> to get a distinct "Subsystem Device ID" to differentiate this card from others.</para>
+                <para>Example: (in create_ip.tcl)</para>
+                <screen>create_ip -name pcie4_uscale_plus -vendor xilinx.com -library ip -module_name pcie4_uscale_plus_0 -dir $ip_dir >> $log_file
+set_property -dict [list                                               \
+                    CONFIG.PF0_CLASS_CODE {1200ff}                     \
+                    CONFIG.PF0_REVISION_ID {02}                        \
+                    CONFIG.VENDOR_ID {1014}                            \
+                    CONFIG.PF0_DEVICE_ID {0477}                        \
+                    CONFIG.PF0_SUBSYSTEM_VENDOR_ID {1014}              \
+                    CONFIG.PF0_SUBSYSTEM_ID {0661}                     \
+                    ......                                             \
+                    ......                                             \
+                   ] [get_ips pcie4_uscale_plus_0] >> $log_file</screen>
+           <para>The corresponding  "Subsytem Vendor ID" and "Subsystem Device ID" need to be added into <link xlink:href="https://github.com/ibm-capi/capi-utils">capi-utils</link>, file "psl-devices".</para>
+                </listitem>
+            </itemizedlist>
         </listitem>
-        <listitem> <para> As a CAPI device, you need to make sure PF0 (physical function) has <userinput>PF0_DEVICE_ID=0477</userinput> and <userinput>PF0_SUBSYSTEM_VENDOR_ID=1014</userinput>. This is required by the linux kernel module cxl <link xlink:href="https://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux.git/tree/drivers/misc/cxl/pci.c">(pci.c)</link>, otherwise the card will not be recognized as a CAPI card by system. </para>
-        </listitem>
-        <listitem>
-        <para>If you are using Xilinx VU33P or VU37P who have HBM, this is actually a new FPGA family "virtexuplushbm". Or if you are using other new FPGA Production family, additional steps need to take:</para>
+        <listitem><para><emphasis role="underline">Product Family support:</emphasis></para>
+         <para>If the FPGA chip types are Xilinx VU33P or VU37P who have HBM, this is actually a new FPGA family <userinput>virtexuplushbm</userinput>. For a new FPGA Production family, additional steps need to take:</para>
         <itemizedlist>
-        <listitem><para>capi2-bsp/psl/create_ip.tcl: "set_property supported_families ...", add new family name like "virtexuplushbm Production"</para></listitem>
-        <listitem><para>capi2-bsp/common/tcl/create_capi_bsp.tcl: "set_property supported_families ...", do the same as above.</para></listitem>
-        <listitem><para>Add family support to PSL9 ZIP package: unzip the package, do the hacking, and zip them back again.</para>
-        <screen>unzip ibm.com_CAPI_PSL9_WRAP_2.00.zip
+                <listitem><para>"capi2-bsp/psl/create_ip.tcl": <userinput>set_property supported_families ...</userinput>, add new family name like "virtexuplushbm Production"</para></listitem>
+                <listitem><para>"capi2-bsp/common/tcl/create_capi_bsp.tcl": <userinput>set_property supported_families ...</userinput>, do the same as above.</para></listitem>
+        <listitem><para>Add family support to PSL9 ZIP package: unzip the package, do the modifications, and zip them back again. Commands:</para>
+        <screen>$ unzip ibm.com_CAPI_PSL9_WRAP_2.00.zip
 (modify compnent.xml to add new family name, search "supportedFamilies")
-zip -r ibm.com_CAPI_PSL9_WRAP_2.00.zip component.xml src/ xgui/
-rm -fr component.xml src/ xgui/</screen>
+$ zip -r ibm.com_CAPI_PSL9_WRAP_2.00.zip component.xml src/ xgui/
+$ rm -fr component.xml src/ xgui/</screen>
         </listitem>
         </itemizedlist>
         </listitem>
 
-        <listitem><para><emphasis role="bold">VSEC starting address: </emphasis> VSEC (Vendor Specific Extended Capability Structure) is a part of PCIe capability list architecture. It needs to be properly linked in PCIe config space. File "capi2-bsp/[FPGACARD]/src/capi_vsec.vhdl, vsec_addr[21:32] defines the address for VSEC. It should be matched with PCIe core value <emphasis role="bold">PF0_SECONDARY_PCIE_CAP_NEXTPTR</emphasis>. Take card U200 for example, its vsec_addr[21:32] starts from 12'h400 (12'b0100_0000_0000), and there is a patch_ip.tcl to modify the pcie4 core's default value 12'h480 to 12'h400. (Actually this is a historical workaround, because Xilinx had modified its extended capability starting address from 12'h400 to 12'h480 on one version. The patch is "tcl/patch_ip.tcl" </para>
+        <listitem><para><emphasis role="underline">VSEC starting address: </emphasis></para>
+                <para>VSEC (Vendor Specific Extended Capability Structure) is a part of PCIe capability list architecture. It needs to be properly linked in PCIe config space. </para> <para>"capi2-bsp/[FPGACARD]/src/capi_vsec.vhdl": <userinput>vsec_addr[21:32]</userinput> defines the address for VSEC. It should be matched with PCIe core value <userinput>PF0_SECONDARY_PCIE_CAP_NEXTPTR</userinput>. Take card U200 for example, its <userinput>vsec_addr[21:32]</userinput> starts from 12'h400 (12'b0100_0000_0000), and "tcl/patch_ip.tcl" modifies it from default value 12'h480 to 12'h400." </para>
                 <screen>exec /bin/bash -c "sed -i \"s/PF0_SECONDARY_PCIE_CAP_NEXTPTR=0x480/PF0_SECONDARY_PCIE_CAP_NEXTPTR=0x400/\" $pcie_source"
 exec /bin/bash -c "sed -i \"s/PF0_SECONDARY_PCIE_CAP_NEXTPTR('H480)/PF0_SECONDARY_PCIE_CAP_NEXTPTR('H400)/\" $pcie_source"</screen>
-                <para>About Xilinx PCIe code information for extended configuration space, you can find it on PG156 (for Ultrascale Device) or PG213 (for Ultrascale+ Device). </para>
-                <para>For Ultrascale+ HBM device, pcie4c core, the VSEC starts from 12'hE80. At this time vsec_addr must be changed in capi_vsec.vhdl. And the above two lines in patch_ip.tcl should be disabled.</para>
+                <para>Xilinx PCIe code information for extended configuration space can be found on <link xlink:href="https://www.xilinx.com/support/documentation/ip_documentation/pcie3_ultrascale/v4_4/pg156-ultrascale-pcie-gen3.pdf">PG156 (for Ultrascale Device)</link> or <link xlink:href="https://www.xilinx.com/support/documentation/ip_documentation/pcie4_uscale_plus/v1_3/pg213-pcie4-ultrascale-plus.pdf">PG213 (for Ultrascale+ Device)</link>.</para>
+                <para>For Ultrascale+ HBM device's pcie4c core, the VSEC starts from 12'hE80. At this time <userinput>vsec_addr[21:32]</userinput> must be changed in "capi_vsec.vhdl". And the above two lines in "patch_ip.tcl" are not needed anymore.</para>
 
         </listitem>
         <listitem>
-            <para><emphasis role="bold">Vital Product Data: </emphasis>Source files under "capi2-bsp/[FPGACARD]/src": capi_vsec.vhdl. <emphasis  role="bold">This step is optional.</emphasis> Edit the hardcoded "vpd44data_be" to add VPD (Vital Product Data) information. Ideally this information should be read from an I2C EEPROM. The FPGA supplier wrote the content of EEPROM before shipping. However, today we take the simpliest way to write some hard coded value. "capi2-bsp/common/script" has a script "gen_vsec.sh" to help you do this. </para>
+                <para><emphasis role="underline">Vital Product Data: </emphasis><emphasis  role="bold">This step is optional.</emphasis></para>
+                <para>"capi2-bsp/[FPGACARD]/src/capi_vsec.vhdl": Edit the hardcoded <userinput>vpd44data_be</userinput> to add VPD (Vital Product Data) information. Ideally this information should be read from an I2C EEPROM. The FPGA supplier wrote the content of EEPROM before shipping. However, today we take the simpliest way to write some hard coded value. "capi2-bsp/common/script" has a script "gen_vsec.sh" to do this. </para>
         </listitem>
 
         <listitem>
-        <para><emphasis role="bold">User Image Address: </emphasis>Source files under "capi2-bsp/[FPGACARD]/src": capi_xilmltbt.vhdl. Edit the User image starting address "wbstart_addr". </para>
+                <para><emphasis role="underline">User Image Address: </emphasis></para>
+                <para>"capi2-bsp/[FPGACARD]/src/capi_xilmltbt.vhdl": Edit the User image starting address <userinput>wbstart_addr</userinput>. </para>
         <screen>wbstart_addr &lt;=  "User_image_address"  when (cpld_user_bs_req = '1') else "00000000000000000000000000000000";</screen>
-        <para>capi_xilmltbt.vhdl has a Xilinx multi-boot core. That means you can create two kinds of images: Factory image and User image. Factory images will be placed at address 0 of FPGA Flash, and User image will be placed at "User_image_address" on the flash. When power-on or the FPGA card is reset, the multiboot core knows where to load the image. Usually we put a Golden factory image on address 0 and never change it, and multiboot core always tries to load user image first. If the user image has something wrong, multiboot logic will tell the FPGA to "fallback" to factory image. You still see the card in the system and you can just program a new user image to try again. </para>
+        <para>"capi_xilmltbt.vhdl" has a Xilinx multi-boot core. That means you can create two kinds of images: Factory image and User image. Factory images will be placed at address 0 of FPGA Flash, and User image will be placed at "User_image_address" on the flash. When power-on or the FPGA card is reset, the multiboot core knows where to load the image. Usually we put a Golden factory image on address 0 and never change it, and multiboot core always tries to load user image first. If the user image has something wrong, multiboot logic will tell the FPGA to "fallback" to factory image. You still see the card in the system and you can just program a new user image to try again. </para>
         </listitem>
 
         <listitem>
-        <para> Check Vivado Version. Make sure this version of Vivado tool supports the FPGA part name you have assigned in "capi2-bsp/[FPGACARD]/Makefile". For some very new FPGA chip types, in one Vivado version they may have a suffix of "es" (engineering sample), and in a newer Vivado version the "es" suffix is removed.</para>
+                <para><emphasis role="underline">Check Vivado Version:</emphasis></para>
+                <para>Make sure this version of Vivado tool supports the FPGA part name you have assigned in "capi2-bsp/[FPGACARD]/Makefile". For some very new FPGA chip types, in one Vivado version they may have a suffix of "es" (engineering sample), and in a newer Vivado version the "es" suffix is removed.</para>
         </listitem>
         </orderedlist>
     </section>
     <section><title>Generate capi_bsp_wrap</title>
         <screen>cd capi2-bsp
 make [FPGACARD]</screen>
-        <para>If it is successfully done, the generation of BSP for CAPI2.0 is completed. For HDK developers, they can create their own Vivado project and import capi_bsp_wrap as an IP. But for SNAP developers, there are some other work to do, see in next chapter.</para>
+        <para>If it is successfully done, the generation of BSP for CAPI2.0 is completed. Developers using HDK mode can create their own Vivado project and import capi_bsp_wrap as an IP. But for SNAP developers there are some other work to do, see in next chapter.</para>
     </section>
 </section>
 
