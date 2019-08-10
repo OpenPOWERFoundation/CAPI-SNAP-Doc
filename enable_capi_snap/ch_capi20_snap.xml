@@ -24,10 +24,10 @@
     <para>Snap is also a public Github repository. Create a "fork" (Click the "fork" button) on <link xlink:href="https://github.com/open-power/snap">https://github.com/open-power/snap</link>. Keep working on your own snap fork, when it works, submit a pull request to "open-power/snap" and require merging into the public upstream.</para>
     <screen>git clone https://github.com/[YOUR_USERNAME]/snap</screen>
     <note>
-    <para>capi2-bsp is a submodule of snap. You can find it in ".gitmodules" file (this is a hidden file). Please point it to your own capi2-bsp fork. Then </para>
+    <para>capi2-bsp is a submodule of snap. It is shown in ".gitmodules" file (this is a hidden file). Please point it to your own capi2-bsp fork. Then </para>
     <screen>git submodule init
 git submodule update</screen>
-    <para>Anyway, make sure that "hardware/capi2-bsp" is what you have just generated in last chapter.</para>
+    <para>Anyway, make sure that "hardware/capi2-bsp" is the one just generated in last chapter.</para>
     </note>
 </section>
 
@@ -63,7 +63,7 @@ git submodule update</screen>
             <para><userinput>make model</userinput>: This step creates a Vivado project. It firstly calls "hardware/setup/create_snap_ip.tcl" to generate the IP files in use, then calls "hardware/setup/create_framework.tcl" to build the project. About "create_framework.tcl": </para>
     <itemizedlist>
     <listitem>
-    <para>It adds BSP (board support package). In CAPI1.0, it is also called PSL Checkpoint file (b_route_design.dcp) or base_image. It uses the path pointed to b_route_design.dcp and adds it into the design. In CAPI2.0, it will call the make process in capi2-bsp submodule to generate "capi_bsp_wrap" if it doesn't exist. If you have already successfully generated it, this step is skipped. Then "create_framework.tcl"  adds the capi_bsp_wrap (xcix or xci file) into the design.</para>
+    <para>It adds BSP (board support package). In CAPI1.0, it is also called PSL Checkpoint file (b_route_design.dcp) or base_image. It uses the path pointed to b_route_design.dcp and adds it into the design. In CAPI2.0, it will call the make process in capi2-bsp submodule to generate "capi_bsp_wrap" if it doesn't exist. This step is skipped if "capi_bsp_wrap" is already generated. Then "create_framework.tcl"  adds the capi_bsp_wrap (xcix or xci file) into the design.</para>
     </listitem>
     <listitem>
     <para>It adds FPGA top files and snap_core files (in hardware/hdl/core).</para>
@@ -78,7 +78,7 @@ git submodule update</screen>
             <para>It adds simulation files (in "hardware/sim/core") including simulation top files and simulation models. (If <userinput>no_sim</userinput> is selected in snap_config menu, this step is skipped.)</para>
     </listitem>
     </itemizedlist>
-    <para>After above steps, "<emphasis role="bold">hardware/viv_project</emphasis>" is created. You can open it with Vivado GUI, and check the design hierarchy. And it will call the selected simulator to compile the simulation model.</para>
+    <para>After above steps, "<emphasis role="bold">hardware/viv_project</emphasis>" is created. Open it with Vivado GUI, and check the design hierarchy. And it will call the selected simulator to compile the simulation model.</para>
     </listitem>
     <listitem>
             <para><userinput>make image</userinput>: This step runs synthesis, implementation and bitstream generation. It calls "hardware/setup/snap_build.tcl" and also uses some related tcl scripts to work together. In this step, "<emphasis role="bold">hardware/build</emphasis>" will be created and the output products like bit images, checkpoints (middle products for debugging) and reports (reports of timing, clock, IO, utilization, etc.) If everything runs well and timing passes, user will get the bitstream files (in "build/Images" sub directory) to program the FPGA card. </para>
@@ -96,7 +96,7 @@ git submodule update</screen>
 
         <para>The best way is to grep some keywords like "S241" or "AD8K5" under the directories and look for the locations that need modifications.</para>
         <note>
-        <para>If you meet files ending with "_source", like "psl_fpga.vhd_source", that means this file will be pre-processed to generate the output file without "_source" suffix, like "psl_fpga.vhd". There are <userinput>#ifdef</userinput> macros or comments like <userinput>-- only for NVME_USED=TRUE</userinput>. They help to create a target VHDL/Verilog file with different configurations.</para>
+        <para>A file ending with "_source", like "psl_fpga.vhd_source", means this file will be pre-processed to generate the output file without "_source" suffix, like "psl_fpga.vhd". There are <userinput>#ifdef</userinput> macros or comments like <userinput>-- only for NVME_USED=TRUE</userinput>. They help to create a target VHDL/Verilog file with different configurations.</para>
         </note>
         <para>Below lists the files to change:</para>
         <itemizedlist>
@@ -181,7 +181,7 @@ git submodule update</screen>
                 <row><entry><para>hardware/setup/snap_bitstream_pre.tcl</para></entry><entry><para>declare card name</para></entry></row>
                 <row><entry><para>hardware/setup/snap_bitstream_step.tcl</para></entry><entry><para>declare card name</para></entry></row>
                 <row><entry><para>hardware/setup/snap_impl_step.tcl</para></entry><entry><para>declare card name</para></entry></row>
-                <row><entry><para>hardware/sim/ddr4_dimm_???.sv</para></entry><entry><para>DDR memory model for simulation. Please get the information about how many DDR chips are connected together, the density and data width of each chip, and whether there is one chip is used for ECC (redundant). You can take an existing one as a template and modify.</para></entry></row>
+                <row><entry><para>hardware/sim/ddr4_dimm_???.sv</para></entry><entry><para>DDR memory model for simulation. Please get the information about how many DDR chips are connected together, the density and data width of each chip, and whether there is one chip is used for ECC (redundant). Take an existing one as a template and modify.</para></entry></row>
                 <row><entry><para>hardware/sim/top_capi?0.sv_source</para></entry><entry><para>Instantiate the DDR memory model</para></entry></row>
                 <row><entry><para>hardware/snap_check_psl (Only for CAPI1.0)</para></entry><entry><para>declare card name</para></entry></row>
             </tbody>
@@ -236,7 +236,7 @@ git submodule update</screen>
             </thead>
             <tbody>
                 <row><entry><para>actions/scripts/snap_jenkins.sh</para></entry><entry><para>jenkins tests (optional)</para></entry></row>
-                <row><entry><para>defconfig/{FPGACARD}*.defconfig</para></entry><entry><para>For silent jenkins testing (optional)</para></entry></row>
+                <row><entry><para>defconfig/${FPGACARD}*.defconfig</para></entry><entry><para>For silent jenkins testing (optional)</para></entry></row>
                 <row><entry><para>README.md</para></entry><entry><para>Announce a new card is supported </para></entry></row>
             </tbody>
             </tgroup>
@@ -248,7 +248,7 @@ git submodule update</screen>
     <para>There is only one file to be modified: "psl-devices". Add a new line, for example</para>
     <screen>0x1014 0x0665 U200 Xilinx 0x1002000 64 SPIx4</screen>
     <para>It lists the Subsystem Vendor ID, Subsystem Device ID, Card name, FPGA chip, then it is the "User_image_address" on the flash. For SPI device, size of block is 64Bytes. "SPIx4" is the flash interface type. It may also be "DPIx16" or "SPIx8". </para>
-    <para>"SPIx8" uses two bitstreams so another starting address also needs to be provided. And when you call "capi-flash-script" to program the flash, it needs two input bitstream files (primary and secondary).</para>
+    <para>"SPIx8" uses two bitstreams so another starting address also needs to be provided. Script "capi-flash-script" needs two input bitstream files (primary and secondary) to program the flash.</para>
 
 </section>
 <section><title>Strategy to enable a new card</title>
@@ -262,12 +262,12 @@ git submodule update</screen>
         <listitem><para>Select an action example without DDR, for example: hls_helloworld. </para></listitem>
         <listitem><para>Go through the <userinput>make model</userinput> and <userinput>make image</userinput> processes and build the bitstream files. </para></listitem>
         <listitem><para>Plug the card onto Power9 server and connect a JTAG/USB cable to a laptop. Install Vivado Lab on this laptop (it requires Windows or Linux operating system). Start Vivado Lab tool, open Hardware manager.</para></listitem>
-        <listitem><para>Power on the server. You will see the FPGA target is recognized by Vivado Lab tool.</para></listitem>
+        <listitem><para>Power on the server. Soon the FPGA target is recognized by Vivado Lab tool.</para></listitem>
         <listitem><para>Program the generated bitstream files (bin or mcs) to the card. On Vivado Lab tool, select the FPGA chip and right-click, choose "Add Configuration Memory Device..." and program the bin or mcs files to the flash. See in picture <xref linkend="vivado-lab"/> and <xref linkend="jtag"/> </para></listitem>
         <listitem><para>Wait it done (It may take 10 minutes). Unplug the JTAG/USB cable, reboot the server.</para></listitem>
         <listitem><para>After the server is booted, log into OS, run <userinput>lspci</userinput> to see if the card is there. (Usually with Device ID 0x0477). Then download snap, capi-utils, libcxl (from github). Go to snap directory, <userinput>make apps</userinput> and run the application. </para></listitem>
         </orderedlist>
-        <note><para>There is another way to replace step 6 to 8. We call it <emphasis role="underline">"Fast program bit-file when power on"</emphasis>. Prepare the <emphasis role="bold">bit</emphasis> file on laptop in advance. Not like bin/mcs files which are for the flash, the bit file is used to program the FPGA chip directly. When the server is powered on, after Vivado Lab sees the FPGA, right click the device, "program device..." and select the bit file <emphasis role="bold">immediately</emphasis>. This action only takes about 10 seconds and can be done before skiboot on the server starts to scan PCIe devices.</para>
+        <note><para>There is another way to replace step 6 to 8 which is called <emphasis role="underline">"Fast program bit-file when power on"</emphasis>. Prepare the <emphasis role="bold">bit</emphasis> file on laptop in advance. Not like bin/mcs files which are for the flash, the bit file is used to program the FPGA chip directly. When the server is powered on, after Vivado Lab sees the FPGA, right click the device, "program device..." and select the bit file <emphasis role="bold">immediately</emphasis>. This action only takes about 10 seconds and can be done before skiboot on the server starts to scan PCIe devices.</para>
         <para>Be aware of the fact that now only FPGA chip is programmed, (the flash memory is still empty or holding old data), so when the server is powered off or reboot the recent programming to FPGA chip will be lost.</para>
         </note>
 
@@ -289,9 +289,9 @@ git submodule update</screen>
         </figure> 
 
         <important>
-        <para>When you download and install <emphasis role="bold">Vivado Lab</emphasis>, please choose as same version as the Vivado tool that you were using to build images. </para>
+        <para>When installing <emphasis role="bold">Vivado Lab</emphasis>, please choose as same version as the Vivado tool which was used to build images. </para>
         </important>
-        <para> <emphasis role="underline">Tips to help you debug:</emphasis></para>
+        <para> <emphasis role="underline">Tips to debugging:</emphasis></para>
         <orderedlist>
                 <listitem><para>Seeing 0477 by <userinput>lspci</userinput> is the most important milestone. If not, please check file "<emphasis role="bold">/sys/firmware/opal/msglog</emphasis>" to see whether there are link training failed messages. A successful message looks like this, which means this PCIe device has been scanned and recognized. The number followed "PHB#" is the PCIe device identifier in the format of "domain:bus:slot.func":</para>
 <screen>[   63.403485191,5] PHB#0000:00:00.0 [ROOT] 1014 04c1 R:00 C:060400 B:01..01 SLOT=CPU1 Slot2 (16x)
@@ -303,17 +303,17 @@ git submodule update</screen>
 [    9.303327] cxl-pci 0000:01:00.0: PCI host bridge to bus 0006:00
 [    9.306749] cxl afu0.0: Activating AFU directed mode</screen>
                 </listitem>
-                <listitem><para>Today most of the linux kernel versions already include cxl module. You can doublecheck it by:</para>
+                <listitem><para>Today most of the linux kernel versions already include cxl module. Doublecheck it by:</para>
                         <screen>modinfo cxl</screen>
                 </listitem>
 
         <listitem>
-         <para>If your PCIe device has been recognized as CAPI, <prompt>ls /dev/cxl</prompt> and you can see "afu*" devices. Then your application software can open the device like operating an ordinary file.</para>
+         <para>If the PCIe device has been recognized as CAPI, <prompt>ls /dev/cxl</prompt> and "afu*" devices should be there. Then application software can open the device like operating an ordinary file.</para>
         <screen>ls /dev/cxl
 afu0.0m  afu0.0s</screen>
         <para>Some other useful commands to check PCIe config (with the right PCIe identifier "domain:bus:slot.func") </para>
         <screen>sudo lspci -s 0000:01:00.0 -vvv</screen>
-        <para>For example, you can check the settings coded in Xilinx PCIe core, like Subsystem Device ID:</para>
+        <para>It shows the settings coded in Xilinx PCIe core, like Subsystem Device ID:</para>
         <screen>0000:01:00.0 Processing accelerators: IBM Device 0477 (rev 02) (prog-if ff)
 	Subsystem: IBM Device 0660</screen>
         <para>Link Speed</para>
@@ -335,10 +335,10 @@ Kernel driver in use: cxl-pci
 Kernel modules: cxl</screen>
 </listitem>
         <listitem>
-                <para>If nothing shows by <userinput>ls /dev/cxl</userinput>, you should check PCIe config space:</para>
+                <para>If nothing shows by <userinput>ls /dev/cxl</userinput>, check PCIe config space:</para>
         <screen>sudo hexdump /sys/bus/pci/devices/0000\:00\:00.1/config
         </screen>
-        <para>Please pick up the PCIe device identifier (0000:00:00.1) you want to check. Make sure the VSEC is properly linked. If not, go back to check "capi_vsec.vhdl".</para>
+        <para>Please pick up the correct PCIe device identifier (0000:00:00.1). Make sure the VSEC is properly linked. If not, go back to check "capi_vsec.vhdl".</para>
         <screen>0000000 1014 0477 0146 0010 ff02 1200 0000 0000
 0000010 000c 0000 2200 0006 000c 1000 2200 0006
 0000020 000c 0000 0000 0002 0000 0000 1014 0668
@@ -378,7 +378,7 @@ Kernel modules: cxl</screen>
 
     </section>
     <section><title>Stage 2: Verify Flash interface</title>
-        <para>Use <link xlink:href="https://github.com/ibm-capi/capi-utils">capi-utils</link> to program the bitstream files. If it succeeds, it proves that the Flash interface has been configured correctly. After this step, you can get rid of JTAG connector and use "capi-flash-script" to program the FPGA bitstreams. </para>
+        <para>Use <link xlink:href="https://github.com/ibm-capi/capi-utils">capi-utils</link> to program the bitstream files. If it succeeds, it proves that the Flash interface has been configured correctly. After this step, JTAG connector is not needed anymore. Use "capi-flash-script" to program the FPGA bitstreams. </para>
         <para>The mechanic behind "capi-flash-script" is: </para>
         <para>There is a flash controller on FPGA (in capi_bsp_wrap), and it connects to PCIe config space. The flash controller exposes four VSEC registers to allow host system to control. They are: </para>
         <itemizedlist>
@@ -398,7 +398,7 @@ Kernel modules: cxl</screen>
         <listitem><para>Use capi-utils to program the bitstream "bin" file to the card.</para></listitem>
         <listitem><para>Run the application to see whether it works.</para></listitem>
         </orderedlist>
-        <para>Basically SNAP only implemented one DDR Bank (or channel) while most cards have two to four banks. (N250S+ is one of the rare card which has only one DDR bank). To implement more DDR channels, depending on user's needs, there are two options: the first is to just extend the size of the first bank by adding this second bank on the same DDR memory controller. The other option is to use two (or more) memory controllers in parallel to have a higher throughput. This later option means that you will need to duplicate the DDR memory controller in place and this will take twice the place in the design. In this case, the action_wrapper also requires change to add the additional DDR ports. For HLS design, another HLS DDR port should be added into "actions/[YOUR_ACTION]/hw/XXX.CPP". As for an opensource project, everyone is welcomed to add your contribution by implementing it and add it to the SNAP design.</para>
+        <para>Basically SNAP only implemented one DDR Bank (or channel) while most cards have two to four banks. (N250S+ is one of the rare card which has only one DDR bank). To implement more DDR channels, depending on user's needs, there are two options: the first is to just extend the size of the first bank by adding this second bank on the same DDR memory controller. The other option is to use two (or more) memory controllers in parallel to have a higher throughput. This later option means duplicating the DDR memory controller in place and this will take twice the place in the design. In this case, the action_wrapper also requires change to add the additional DDR ports. For HLS design, another HLS DDR port should be added into "actions/[YOUR_ACTION]/hw/XXX.CPP". As for an opensource project, everyone is welcomed to add your contribution by implementing it and add it to the SNAP design.</para>
     </section>
 
 
@@ -409,7 +409,7 @@ Kernel modules: cxl</screen>
 
 
     <section><title>Stage 5: Performance Validation</title>
-        <para>You can check the result of "snap/actions/hls_memcopy/tests/test_*_throughput.sh" for bandwidth and "snap/actions/hls_latency_eval/test/test*.sh" for latency.  </para>
+        <para>Check the result of "snap/actions/hls_memcopy/tests/test_*_throughput.sh" for bandwidth and "snap/actions/hls_latency_eval/test/test*.sh" for latency.  </para>
     </section>
 
     <section><title>Stage 6: Pressure Test</title>

@@ -65,7 +65,7 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
    </itemizedlist> 
    <para> They can be downloaded at <link xlink:href="https://www.ibm.com/systems/power/openpower">https://www.ibm.com/systems/power/openpower</link>. From the menu, select "CAPI","Coherent Accelerator Processor Interface (CAPI)" or directly click the "CAPI" icon to go to the CAPI section. Then download the appropriate files depending on your target system being POWER8 (CAPI 1.0) or POWER9 (CAPI 2.0). You need to register an IBM ID to download them.</para>
    <para>Users can develop CAPI accelerators in two modes: HDK and SNAP.</para>
-   <para>HDK is the abbreviation of Hardware Development Kit. As shown in the diagram below, on the FPGA side, you need a Xilinx Vivado project which includes two parts: BSP (Board Supporting Package, containing PSL module) and AFU (Acceleration Function Unit). How to generate BSP will be introduced in Chapter <xref linkend="chapter_capi20_bsp" endterm="chapter_capi20_bsp_title"/></para>   
+   <para>HDK is the abbreviation of Hardware Development Kit. As shown in the diagram below, on the FPGA side, the Xilinx Vivado project includes two parts: BSP (Board Supporting Package, containing PSL module) and AFU (Acceleration Function Unit). How to generate BSP will be introduced in Chapter <xref linkend="chapter_capi20_bsp" endterm="chapter_capi20_bsp_title"/></para>   
     <figure pgwide="1" xml:id="hdk1">
         <title>Develop an accelerator in HDK mode</title>
         <mediaobject>
@@ -76,8 +76,8 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
     </figure> 
 
     <para>AFU is where to implement user-defined functions. The developer working on AFU needs to understand the protocol between AFU and BSP, which is called PSL/AFU interface specification. Please refer to <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/psl-afu-spec/content/go01.html"> CAPI1.0 PSL Spec</link> and <link xlink:href="http://openpowerfoundation.org/wp-content/uploads/resources/v2-psl-afu-spec/content/ch_preface.html"> CAPI2.0 PSL Spec</link> or search "PSL/AFU interface" in your web browser. </para>
-    <para>When you develop an acceleration, you also need <link xlink:href="https://github.com/ibm-capi/pslse">PSLSE</link> (PSL Simulation Engine) for a software-hardware co-simulation to guarantee the correctness of accelerator design. </para>
-    <para>When you deploy the acceleration to OpenPower servers, it requires user library <link xlink:href="https://github.com/ibm-capi/libcxl">libcxl</link> and kernel module <userinput>cxl</userinput> to run the application. </para>
+    <para>When developing an acceleration, <link xlink:href="https://github.com/ibm-capi/pslse">PSLSE</link> (PSL Simulation Engine) is also needed to make a software-hardware co-simulation which guarantees the correctness of accelerator design. </para>
+    <para>When deploying the acceleration to OpenPower servers, it requires user library <link xlink:href="https://github.com/ibm-capi/libcxl">libcxl</link> and kernel module <userinput>cxl</userinput> to run the application. </para>
     <para>In all, HDK mode will provide the maximum control, utilization of resources and shortest latency. However, SNAP mode simplifies and standardizes the application development significantly and is more recommended.</para>
    </section>
 
@@ -101,7 +101,7 @@ xmlns:xlink="http://www.w3.org/1999/xlink" xml:id="chapter_introduction">
     </figure> 
     <para>Equipping the new FPGA card with SNAP framework needs a few additional steps and is introduced in Chapter <xref linkend="chapter_capi20_snap" endterm="chapter_capi20_snap_title"/></para>
     <note><para>This document focuses on CAPI2.0. For CAPI1.0 enablement, please contact <email>capi-snap-doc@mailinglist.openpowerfoundation.org</email> for more information.</para>
-   <para>It is assumed the reader knows how to work on Vivado Project and SNAP already. You can find many materials on how to develop an accelerator with SNAP (Training videos, "docs" folder on <link xlink:href="https://github.com/open-power/snap"> snap github</link>, or other webpages) so they are not discussed in this document.</para></note>
+   <para>It is assumed the reader knows how to work on Vivado Project and SNAP already. Many materials on how to develop an accelerator with SNAP can be found in "docs" folder of <link xlink:href="https://github.com/open-power/snap"> snap github</link> or other webpages so they are not discussed in this document.</para></note>
 
   </section>
  

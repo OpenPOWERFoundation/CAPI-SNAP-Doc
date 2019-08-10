@@ -161,14 +161,14 @@ exec /bin/bash -c "sed -i \"s/PF0_SECONDARY_PCIE_CAP_NEXTPTR('H480)/PF0_SECONDAR
         </listitem>
         <listitem>
                 <para><emphasis role="underline">Vital Product Data: </emphasis><emphasis  role="bold">This step is optional.</emphasis></para>
-                <para>"capi2-bsp/[FPGACARD]/src/capi_vsec.vhdl": Edit the hardcoded <userinput>vpd44data_be</userinput> to add VPD (Vital Product Data) information. Ideally this information should be read from an I2C EEPROM. The FPGA supplier wrote the content of EEPROM before shipping. However, today we take the simpliest way to write some hard coded value. "capi2-bsp/common/script" has a script "gen_vsec.sh" to do this. </para>
+                <para>"capi2-bsp/[FPGACARD]/src/capi_vsec.vhdl": Edit the hardcoded <userinput>vpd44data_be</userinput> to add VPD (Vital Product Data) information. Ideally this information should be read from an I2C EEPROM. The FPGA supplier wrote the content of EEPROM before shipping. Today the simpliest way is taken -- writing some hard coded value. "capi2-bsp/common/script" has a script "gen_vsec.sh" to do this. </para>
         </listitem>
 
         <listitem>
                 <para><emphasis role="underline">User Image Address: </emphasis></para>
                 <para>"capi2-bsp/[FPGACARD]/src/capi_xilmltbt.vhdl": Edit the User image starting address <userinput>wbstart_addr</userinput>. </para>
         <screen>wbstart_addr &lt;=  "User_image_address"  when (cpld_user_bs_req = '1') else "00000000000000000000000000000000";</screen>
-        <para>"capi_xilmltbt.vhdl" has a Xilinx multi-boot core. That means you can create two kinds of images: Factory image and User image. Factory images will be placed at address 0 of FPGA Flash, and User image will be placed at "User_image_address" on the flash. When power-on or the FPGA card is reset, the multiboot core knows where to load the image. Usually we put a Golden factory image on address 0 and never change it, and multiboot core always tries to load user image first. If the user image has something wrong, multiboot logic will tell the FPGA to "fallback" to factory image. You still see the card in the system and you can just program a new user image to try again. </para>
+        <para>"capi_xilmltbt.vhdl" has a Xilinx multi-boot core. That means you can create two kinds of images: Factory image and User image. Factory images will be placed at address 0 of FPGA Flash, and User image will be placed at "User_image_address" on the flash. When power-on or the FPGA card is reset, the multiboot core knows where to load the image. Usually a Golden factory image is put on address 0 and is never changed. Multiboot core always tries to load user image first. If the user image has something wrong, multiboot logic will tell the FPGA to "fallback" to factory image. You still see the card in the system and you can just program a new user image to try again. </para>
         </listitem>
 
         <listitem>
