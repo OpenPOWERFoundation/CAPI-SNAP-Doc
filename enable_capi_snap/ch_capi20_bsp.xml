@@ -112,7 +112,7 @@
         <para>Download PSL9 Zip package from <link xlink:href="https://www-355.ibm.com/systems/power/openpower/posting.xhtml?postingId=1BED44BCA884D845852582B70076A89A">OpenPower Portal</link> and put it in "capi2-bsp/psl" directory. </para>
     </section>
     <section><title>Copy and modify</title>
-        <para> Choose an existing card as a base. Copy the folder to your new FPGACARD name. Then modify the contents according to the information collected from FPGA supplier.</para>
+        <para>Choose an existing card as a base. Copy the folder to your new FPGACARD name. Then modify the contents according to the information collected from FPGA supplier.</para>
         <important><para> Make sure the information in xdc/tcl files are permitted to be open-source. </para></important>
         <para>There are some other modifications you should pay attention to:</para>
         <orderedlist>

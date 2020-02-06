@@ -24,8 +24,11 @@ This can be accomplished with the following steps:
   $ mvn clean generate-sources
   ```
 
-The online version of the document can be found in the OpenPOWER Foundation
-Document library at [TBD](http://openpowerfoundation.org/?TBD).  
+For more information about with the document generation, please refer to [Documentation Development Guide](https://openpowerfoundation.org/?resource_lib=openpower-foundation-documentation-development-guide)
+
+The online version of this document can be found in the OpenPOWER Foundation
+Document library at [TBD](http://openpowerfoundation.org/?TBD) and also this github repository's release tab.   
+
 
 ## License
 This project is licensed under the Apache V2 license.  More information
