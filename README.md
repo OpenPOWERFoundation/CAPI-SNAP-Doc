@@ -27,7 +27,7 @@ This can be accomplished with the following steps:
 For more information about with the document generation, please refer to [Documentation Development Guide](https://openpowerfoundation.org/?resource_lib=openpower-foundation-documentation-development-guide)
 
 The online version of this document can be found in the OpenPOWER Foundation
-Document library at [TBD](http://openpowerfoundation.org/?TBD) and also this github repository's release tab.   
+Document library at [https://openpowerfoundation.org/?resource_lib=enable-new-fpga-cards-for-capi-2-0](https://openpowerfoundation.org/?resource_lib=enable-new-fpga-cards-for-capi-2-0) and also this github repository's release tab.   
 
 
 ## License
