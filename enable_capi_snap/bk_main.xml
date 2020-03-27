@@ -48,11 +48,11 @@
       </affiliation>
     </author>
     <copyright>
-      <year>2018</year>
+      <year>2020</year>
       <holder>OpenPOWER Foundation</holder>
     </copyright>
     <!-- TODO: Set the correct document releaseinfo -->
-    <releaseinfo>Revision 1.0_pre3</releaseinfo>
+    <releaseinfo>Revision 1.0</releaseinfo>
     <productname>OpenPOWER</productname>
     <pubdate/>
 

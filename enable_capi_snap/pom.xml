@@ -133,7 +133,7 @@
                                            review =    this document is presently being reviewed
 
                                        The appropriate starting security for a new document is "draft". -->
-                            <documentStatus>review</documentStatus>
+                            <documentStatus>published</documentStatus>
                             <!-- documentStatus>review</documentStatus -->
                             <!-- documentStatus>published</documentStatus -->                            
 
